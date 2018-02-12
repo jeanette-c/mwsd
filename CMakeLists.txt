@@ -7,6 +7,8 @@
 cmake_minimum_required (VERSION 3.1)
 # Include additional find modules
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+# Enable c++11 standard
+set (CMAKE_CXX_STANDARD 11)
 project (mwsd C CXX) # project name and involved programming languages
 # The main executable and its source files
 
