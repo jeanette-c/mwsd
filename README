@@ -1,0 +1,34 @@
+mwsd - MicroWave Synthesizer Display
+This is a small ncurses based application to read MIDI and SysEx data from
+the Waldorf Microwave II/XT synthesizer, optionally displaying the
+synthesizer's display contents on the computer screen.
+This is free software, released under the terms of the GNU General Public
+License version 3. A copy of the GPL is available in the file COPYING.
+
+This application should work on Linux (and other Unices supporting either
+ALSA and JACK) and Mac OS X).
+Windows support would take some extra code and is thus omitted, at the moment.
+
+The program can take a few options to set up the MIDI device and the
+synthesizer's device ID, but it can also query them fully interactively and
+is, thus, self explanatory.
+
+If you have feedback or issues using and compiling this program, please get in
+contact:
+jeanette@juliencoder.de
+
+INSTLLATION
+mwsd uses CMake to install, the following commands will build and install
+the program:
+cd mwsd-x.y
+# x.y being the current version
+mkdir build
+cd build
+cmake ..
+make
+make install
+# if you're installing as a user:
+sudo make install
+
+Enjoy,
+Jeanette
