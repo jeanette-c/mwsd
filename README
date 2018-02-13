@@ -1,34 +1,48 @@
 mwsd - MicroWave Synthesizer Display
-This is a small ncurses based application to read MIDI and SysEx data from
-the Waldorf Microwave II/XT synthesizer, optionally displaying the
-synthesizer's display contents on the computer screen.
-This is free software, released under the terms of the GNU General Public
-License version 3. A copy of the GPL is available in the file COPYING.
+Copyright 2018 by Jeanette C. <jeanette@juliencoder.de>
 
-This application should work on Linux (and other Unices supporting either
-ALSA and JACK) and Mac OS X).
-Windows support would take some extra code and is thus omitted, at the moment.
+SUMMARY
+mwsd is a small cross-platform utility to show the Waldorf Microwave II/Xt's
+display contents on a computer screen or display direct MIDI/SysEx data.
+It is a terminal application using ncurses to display basic windows.
+It is known to run on Linux and Mac OS X. Windows is not (yet) supported.
+If you need Windows support, please get in contact.
+The software was designed to assist blind users of the Microwave II/XT
+synthesizer to enjoy their instruments, but it can also be used for remote
+diagnosis.
 
-The program can take a few options to set up the MIDI device and the
-synthesizer's device ID, but it can also query them fully interactively and
-is, thus, self explanatory.
+REQUIREMENTS
+A hardware MIDI interface (USB/Firewire, PCI,...)
+Libraries:
+	ncurses - for output to the screen
+	RtMidi - for MIDI I/O
+	boost_program_options - to read commandline options and the config file
+	The rest should be system standard
+Standard development tools (a c++ compiler, linker, make, etc.)
+CMake - to build the software
+	(Compilation was tested with g++ version 7.2.1 and Clang)
 
-If you have feedback or issues using and compiling this program, please get in
-contact:
-jeanette@juliencoder.de
-
-INSTLLATION
-mwsd uses CMake to install, the following commands will build and install
-the program:
-cd mwsd-x.y
-# x.y being the current version
+INSTALLATION
+mwsd uses CMake to build the software.
+Following these steps will buld and install the software:
+cd mwsd
 mkdir build
 cd build
 cmake ..
 make
-make install
-# if you're installing as a user:
 sudo make install
 
-Enjoy,
-Jeanette
+LICENSE
+This software is released under the terms of the GNU General Public License
+(GPL) version 3. It is open software. For further details see the file
+COPYING .
+
+CREDITS
+I would like to thanks the MilkyTracker project and Dale Winham in particular
+for his FindRTMIDI cmake module, which I borrowed from MilkyTracker.
+
+BUGS
+There are no known issues at the moment. If you suspect a bug, please send
+an e-mail to me at: jeanette@juliencoder.de and mention mwsd in the subject.
+
+Thank you and enjoy the software
