@@ -34,12 +34,12 @@ using std::thread;
 Curses_mw_ui::Curses_mw_ui():
 	its_x(3), its_y(3), its_ch(0),
 	its_cfg_file_name(""), its_error_msg(""),
-	its_midi_input_name(""), its_midi_output_name(""),
+	its_midi_input_name("In"), its_midi_output_name("Out"),
 	its_status_line(17), its_error_line(18)
 {
 	its_midi_name = string("MWII Display");
-	its_midi_in = new RtMidiIn();
-	its_midi_out = new RtMidiOut();
+	its_midi_in = new RtMidiIn(RtMidi::Api::UNSPECIFIED,its_midi_name);
+	its_midi_out = new RtMidiOut(RtMidi::Api::UNSPECIFIED,its_midi_name);
 	its_error_flag.store(false);
 	its_synth_info = new Synth_info(0x3e,0x0e,0x7f,0x05,0x15,40,2);
 	its_mw_miner = new Curses_mw_miner(its_midi_out,its_synth_info);
@@ -88,7 +88,7 @@ bool Curses_mw_ui::set_midi_input(int port_number)
 		}
 		try
 		{
-			its_midi_in->openPort(port_number,its_midi_name);
+			its_midi_in->openPort(port_number,its_midi_input_name);
 		}
 		catch (RtMidiError& e)
 		{
@@ -136,7 +136,7 @@ bool Curses_mw_ui::set_midi_input(string port_name)
 			}
 			try
 			{
-				its_midi_in->openPort(port_number,its_midi_name);
+				its_midi_in->openPort(port_number,its_midi_input_name);
 			}
 			catch (RtMidiError& e)
 			{
@@ -173,7 +173,7 @@ bool Curses_mw_ui::set_midi_output(int port_number)
 		}
 		try
 		{
-			its_midi_out->openPort(port_number,its_midi_name);
+			its_midi_out->openPort(port_number,its_midi_output_name);
 		}
 		catch (RtMidiError& e)
 		{
@@ -221,7 +221,7 @@ bool Curses_mw_ui::set_midi_output(string port_name)
 			}
 			try
 			{
-				its_midi_out->openPort(port_number,its_midi_name);
+				its_midi_out->openPort(port_number,its_midi_output_name);
 			}
 			catch (RtMidiError& e)
 			{
