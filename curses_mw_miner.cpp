@@ -139,7 +139,16 @@ void Curses_mw_miner::run()
 			{
 				if (its_disp_flag == true)
 				{
-					its_midi_out->sendMessage(&my_disp_req);
+					try
+					{
+						its_midi_out->sendMessage(&my_disp_req);
+					}
+					catch (RtMidiError& e)
+					{
+						its_error_flag.store(true);
+						its_quit_flag.store(true);
+						its_error_msg = e.getMessage();
+					}
 					its_unanswered++;
 					std::this_thread::sleep_for(sleep_time);
 				}
@@ -147,7 +156,16 @@ void Curses_mw_miner::run()
 				{
 					if ((its_thru_flag == false) && (its_new_flag == true))
 					{
-						its_midi_out->sendMessage(&my_disp_req);
+						try
+						{
+							its_midi_out->sendMessage(&my_disp_req);
+						}
+						catch (RtMidiError& e)
+						{
+							its_error_flag.store(true);
+							its_quit_flag.store(true);
+							its_error_msg = e.getMessage();
+						}
 						its_unanswered++;
 						std::this_thread::sleep_for(sleep_time);
 					}

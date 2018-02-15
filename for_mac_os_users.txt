@@ -1,0 +1,59 @@
+You're a Mac OS user and wonder how to install all this software?
+It's easy, follow the steps below. You don't have to be an expert!
+This short guide can't, owever, deal with everything. If you have problems, you
+can contact me at jeanette@juliencoder.de . Be sure to include the word "mwsd"
+on the subject line.
+
+1. Open the terminal
+2. type:
+gcc
+	The computer will tell you how to install the necessary package through the
+	appstore, it's called xcode.
+	Go and do that, it's free for all newer OS versions (>10.10 ?)
+3. Install Homebrew, homebrew can install other missing things:
+Paste the following line into your terminal:
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	Homebrew will tell you, what it needs to do. quoting from their website:
+	"It's a very careful script." So don't worry.
+4. Now use brew to install cmake:
+	In the terminal type:
+	brew install boost
+5. Now install the boost libraries.
+	Again in the termina type:
+	brew install boost
+6. Downloading RtMidi:
+	In your favourite browser go to:
+	http://www.music.mcgill.ca/~gary/rtmidi/release/
+	download the latest version (at the bottom of the list)
+	The file will be called rtmidi-x.y.z.tar.gz, where x, y and z are the version
+	number, as of 08.2017 that is 3.0.0
+7. Installing rtmidi:
+	Go to the terminal, into the folder, where you've put rtmidi.
+	If you didn't specify a folder, usually:
+	cd ~/Downloads
+	will get you there. Now type:
+	tar zxvf rtmidi-x.y.z.tar.gz
+	(replace x.y.z with the correct version, NOTE: you can complete filenames
+	by pressing the <TAB> key)
+	Next change into the unpacked directory:
+	cd rtmidi-x.y.z
+	Now type the following:
+	./configure
+	When that finishes without errors, type:
+	make
+	and when that finishes without errors, type:
+	make install
+	If you wish you can now remove the folder and the .tar.gz file
+8. Now install mwsd:
+	Change into the mwsd folder and type:
+	mkdir build
+	cd build
+	cmake ..
+	make
+	make install
+	When there are no errors, you are done and can now call:
+	mwsd --help
+
+Congratulations and enjoy!
+
+Jeanette

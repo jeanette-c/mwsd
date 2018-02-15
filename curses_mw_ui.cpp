@@ -30,12 +30,13 @@ using std::cout;
 using std::endl;
 using std::ofstream;
 using std::thread;
+using std::vector;
 
 Curses_mw_ui::Curses_mw_ui():
 	its_x(3), its_y(3), its_ch(0),
 	its_cfg_file_name(""), its_error_msg(""),
 	its_midi_input_name("In"), its_midi_output_name("Out"),
-	its_status_line(17), its_error_line(18)
+	its_status_line(17), its_error_line(18), its_suggested_dev_id(0x7f)
 {
 	its_midi_name = string("MWII Display");
 	its_midi_in = new RtMidiIn(RtMidi::Api::UNSPECIFIED,its_midi_name);
@@ -43,6 +44,7 @@ Curses_mw_ui::Curses_mw_ui():
 	its_error_flag.store(false);
 	its_synth_info = new Synth_info(0x3e,0x0e,0x7f,0x05,0x15,40,2);
 	its_mw_miner = new Curses_mw_miner(its_midi_out,its_synth_info);
+	its_discovery_flag.store(false);
 }
 
 Curses_mw_ui::~Curses_mw_ui()
@@ -88,7 +90,7 @@ bool Curses_mw_ui::set_midi_input(int port_number)
 		}
 		try
 		{
-			its_midi_in->openPort(port_number,its_midi_input_name);
+			its_midi_in->openPort(port_number,string("In"));
 		}
 		catch (RtMidiError& e)
 		{
@@ -136,7 +138,7 @@ bool Curses_mw_ui::set_midi_input(string port_name)
 			}
 			try
 			{
-				its_midi_in->openPort(port_number,its_midi_input_name);
+				its_midi_in->openPort(port_number,string("In"));
 			}
 			catch (RtMidiError& e)
 			{
@@ -173,7 +175,7 @@ bool Curses_mw_ui::set_midi_output(int port_number)
 		}
 		try
 		{
-			its_midi_out->openPort(port_number,its_midi_output_name);
+			its_midi_out->openPort(port_number,string("Out"));
 		}
 		catch (RtMidiError& e)
 		{
@@ -221,7 +223,7 @@ bool Curses_mw_ui::set_midi_output(string port_name)
 			}
 			try
 			{
-				its_midi_out->openPort(port_number,its_midi_output_name);
+				its_midi_out->openPort(port_number,string("Out"));
 			}
 			catch (RtMidiError& e)
 			{
@@ -282,6 +284,8 @@ void Curses_mw_ui::print_main_screen()
 	cur_line++;
 	mvwprintw(its_win,cur_line,3,"d - toggle direct data / display on demand mode");
 	cur_line++;
+	mvwprintw(its_win,cur_line,3,"p - probe for a synth (autodetect)");
+	cur_line++;
 	mvwprintw(its_win,cur_line,3,"i - set new MIDI input port");
 	cur_line++;
 	mvwprintw(its_win,cur_line,3,"o - set new MIDI output port");
@@ -315,7 +319,9 @@ void Curses_mw_ui::print_main_screen()
 			}
 		}
 	}
-	wmove(its_win,its_status_line,2);
+	its_y = its_status_line;
+	its_x = 2;
+	wmove(its_win,its_y,its_x);
 	wrefresh(its_win);
 }
 
@@ -770,6 +776,29 @@ bool Curses_mw_ui::run()
 				its_mw_miner->focus();
 				break;
 			}
+			case 80:
+			case 112: // p or P
+			{
+				its_mw_miner->set_paused(true);
+				bool ret = probe_synth();
+				if (ret == false)
+				{
+					if (its_error_flag == true)
+					{
+						its_mw_miner->set_quit(true);
+					}
+					else
+					{
+						its_mw_miner->set_paused(false);
+					}
+				}
+				else
+				{
+					its_mw_miner->set_paused(false);
+				}
+				print_main_screen();
+				break;
+			}
 			case 82:
 			case 114: // r or R
 			{
@@ -817,8 +846,319 @@ bool Curses_mw_ui::run()
 	return true;
 }
 
-void mw_midi_callback(double delta_time, std::vector<unsigned char>* message, void* user_data)
+// Local part of port discovery RtMidi callback
+void Curses_mw_ui::discover_port(vector<unsigned char> *message)
+{
+	if (message->size() != 14) // 14 bytes for identity reply
+	{
+		return;
+	}
+	if (message->at(0) == 0xf0) // sysEx start
+	{
+		if (message->at(1) == 0x7e) // General MIDI
+		{
+			if (message->at(2) == 0x06) // Information related
+			{
+				if (message->at(3) == 02) // Identity response
+				{
+					if (message->at(4) == its_synth_info->get_man_id()) // man ID
+					{
+						if (message->at(5) == its_synth_info->get_equip_id()) // Equipment ID
+						{
+							its_discovery_flag.store(true);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// Local part of RtMidi dev ID discovery callback
+void Curses_mw_ui::discover_id(vector<unsigned char> *message)
+{
+	if (message->size() != 14) // size of a correct identity response
+	{
+		return;
+	}
+	if (message->at(2) == 0x06) // MIDI information related
+	{
+		if (message->at(3) == 0x02) // identity response
+		{
+			its_suggested_dev_id = message->at(6); // where the MWII puts it
+		}
+	}
+}
+
+// Probe for a synthy (for now MWII/Xt only)
+bool Curses_mw_ui::probe_synth()
+{
+		// Clear window and print comfort message
+	wclear(its_win);
+	box(its_win,0,0);
+	mvwprintw(its_win,2,2,"Please wait, this may take a few seconds...");
+	wmove(its_win,2,1);
+	wrefresh(its_win);
+
+		// general function variables
+	bool return_value = true;
+	std::chrono::milliseconds sleep_time(100); // wait for synth reply
+	string probe_client_name("MWSD Synth Probe"); // RtMidi client name
+	string tmp_name; // Used for probe port names
+	bool search_quit = false; // Whether to quit the event loop or not
+	unsigned int choice = 0; // The choice amongst the discovered synths
+		// RtMidi I/O for port listing
+	RtMidiIn *min = new RtMidiIn(RtMidi::Api::UNSPECIFIED,probe_client_name);
+	RtMidiOut *mout = new RtMidiOut(RtMidi::Api::UNSPECIFIED,probe_client_name);
+	unsigned int incount = min->getPortCount();
+	unsigned int outcount = mout->getPortCount();
+	if ((outcount == 0) || (incount == 0))
+	{
+		its_error_msg = string("There are no MIDI in- or output ports.");
+		its_error_flag.store(true);
+		its_error_msg = string("There are no MIDI in- or output ports");
+		if (min->isPortOpen())
+		{
+			min->closePort();
+		}
+		if (mout->isPortOpen())
+		{
+			mout->closePort();
+		}
+		return false;
+	}
+
+		// Vectors holding all found ports
+	vector<RtMidiIn *> vmin;
+	vmin.reserve(incount);
+	vector<RtMidiOut *> vmout;
+	vmout.reserve(outcount);
+		// vector holding I/O pairs for discovered synths
+	vector<std::pair<unsigned int, unsigned int> > synth_ports;
+	bool found = false; // set to true when the first synth is discovered
+		// Vector holding identity request message
+	vector<unsigned char> idreq { 0xf0, 0x7e, 0x7f, 0x06, 0x01, 0xf7 };
+	its_discovery_flag.store(false); // will be set by discovery callbacks
+
+	// Prepare the I/O listing and all vectors
+	for (int i = 0;i<incount;i++)
+	{
+		vmin.push_back(new RtMidiIn(RtMidi::Api::UNSPECIFIED,probe_client_name));
+		tmp_name = string("In-") + std::to_string(i);
+		vmin[i]->openPort(i,tmp_name);
+		vmin[i]->ignoreTypes(false,true,true);
+	}
+	for (int i = 0;i<outcount;i++)
+	{
+		vmout.push_back(new RtMidiOut(RtMidi::Api::UNSPECIFIED,probe_client_name));
+		tmp_name = string("Out-") + std::to_string(i);
+		vmout[i]->openPort(i,tmp_name);
+	}
+
+	// Discover synths and store I/O port_number pairs
+	its_discovery_flag.store(false);
+	for (int i = 0;i<outcount;i++)
+	{
+		for (int j = 0;j<incount;j++)
+		{
+			vmin[j]->setCallback(&mw_port_discovery_callback,this);
+			if (vmout[i]->isPortOpen())
+			{
+				vmout[i]->sendMessage(&idreq);
+				std::this_thread::sleep_for(sleep_time);
+				if (its_discovery_flag == true) // a synth was discovered
+				{
+					synth_ports.push_back(std::pair<unsigned int, unsigned int> \
+						(j,i));
+					found = true;
+					its_discovery_flag.store(false);
+				}
+			}
+			vmin[j]->cancelCallback();
+		}
+	}
+	its_discovery_flag.store(false);
+	
+		// show the choices, if any
+	if (found == true)
+	{
+		wclear(its_win);
+		box(its_win,0,0);
+		mvwprintw(its_win,1,5,"%s",PACKAGE_NAME);
+		mvwprintw(its_win,2,2,"Use UP/DOWN cursor keys to choose, ENTER to confirm or Q to quit.");
+		if (synth_ports.size() == 1)
+		{
+			mvwprintw(its_win,3,2,"This synthesizer was found:");
+		}
+		else
+		{
+			mvwprintw(its_win,3,2,"These synthesizers were found:");
+		}
+		for (int i = 0;i<synth_ports.size();i++)
+		{
+			mvwprintw(its_win,(4 + (i*3)),2,"Synthesizer found on:");
+			tmp_name = min->getPortName(synth_ports[i].first);
+			mvwprintw(its_win,(5 + (i*3)),4,"In:  %s",tmp_name.c_str());
+			tmp_name = mout->getPortName(synth_ports[i].second);
+			mvwprintw(its_win,(6 + (i*3)),4,"Out: %s",tmp_name.c_str());
+		}
+		its_x = 2;
+		its_y = 4;
+		wmove(its_win,its_y,its_x);
+		wrefresh(its_win);
+
+		found = false; // reuse to mark that a synth was chosen
+		while (search_quit == false && its_mw_miner->get_quit() == false)
+		{
+			its_ch = getch();
+			switch(its_ch)
+			{
+				case KEY_UP:
+				{
+					if (choice >0)
+					{
+						choice--;
+						its_y = 4 + (3 * choice);
+						wmove(its_win,its_y,its_x);
+						wrefresh(its_win);
+					}
+					else
+					{
+						beep();
+					}
+					break;
+				}
+				case KEY_DOWN:
+				{
+					if (choice < (synth_ports.size() -1))
+					{
+						choice++;
+						its_y = 4 + (3 * choice);
+						wmove(its_win,its_y,its_x);
+						wrefresh(its_win);
+					}
+					else
+					{
+						beep();
+					}
+					break;
+				}
+				case 10: // KEY_ENTER didn't work on Linux
+				{
+					search_quit = true;
+					return_value = true;
+					found = true;
+					break;
+				}
+				case 81:
+				case 113: // q or Q
+				{
+					return_value = false;
+					search_quit = true;
+					break;
+				}
+				default:
+				{
+					if (its_ch != ERR)
+					{
+						beep();
+					}
+					break;
+				}
+			}
+		}
+		
+		if (found == true) // synth chose, get dev ID now
+		{
+				// Number of input and output port
+			int input_n = synth_ports[choice].first;
+			int output_n = synth_ports[choice].second;
+			vmin[input_n]->setCallback(&mw_dev_id_discovery_callback,this);
+			vmout[output_n]->sendMessage(&idreq);
+			std::this_thread::sleep_for(sleep_time);
+			its_synth_info->set_dev_id(its_suggested_dev_id);
+			its_midi_input_name = vmin[input_n]->getPortName(input_n);
+			its_midi_output_name = vmout[output_n]->getPortName(output_n);
+			return_value = set_midi_input(input_n);
+			if (return_value == true)
+			{
+				return_value = set_midi_output(output_n);
+				if (return_value == false)
+				{
+					its_error_flag.store(true);
+				}
+			}
+			else
+			{
+				its_error_flag.store(true);
+			}
+		}
+	}
+	else
+	{
+		return_value = false;
+		wclear(its_win);
+		box(its_win,0,0);
+		mvwprintw(its_win,1,5,"%s",PACKAGE_NAME);
+		mvwprintw(its_win,2,2,"No synthesizers detected. You can try manually.");
+		mvwprintw(its_win,3,2,"Press any key to return to main screen...");
+		wmove(its_win,2,2);
+		wrefresh(its_win);
+		while (getch() == ERR)
+		{
+			;
+		}
+	}
+
+		// Cleanup: close all ports, delete all new'ed objects
+	if (min->isPortOpen())
+	{
+		min->closePort();
+	}
+	if (mout->isPortOpen())
+	{
+		mout->closePort();
+	}
+	for (auto port: vmin)
+	{
+		if (port->isPortOpen())
+		{
+			port->cancelCallback();
+			port->closePort();
+		}
+		delete port;
+	}
+
+	for (auto port: vmout)
+	{
+		if (port->isPortOpen())
+		{
+			port->closePort();
+		}
+		delete port;
+	}
+	return return_value;
+}
+
+void mw_midi_callback(double delta_time, vector<unsigned char>* message, void* user_data)
 {
 	Curses_mw_miner *my_miner = (Curses_mw_miner *)user_data;
 	my_miner->accept_msg(delta_time,message);
+}
+
+// RtMidi callback for port probing for synths
+void mw_port_discovery_callback(double deltatime, vector<unsigned char> * message, void *user_data)
+{
+	Curses_mw_ui *my_ui = (Curses_mw_ui *)user_data;
+	// Do the rest within the Curses_mw_ui object, because of local information
+	// needed:
+	my_ui->discover_port(message);
+}
+
+// RtMidi callback to discover the ID of a synth
+void mw_dev_id_discovery_callback(double deltatime, vector<unsigned char> *message,void *user_data)
+{
+	Curses_mw_ui *my_ui = (Curses_mw_ui *)user_data;
+	// Do the rest within Curses_mw_ui object, because of local information
+	my_ui->discover_id(message);
 }

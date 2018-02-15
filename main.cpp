@@ -161,6 +161,26 @@ int main(int argc, char *argv[])
 	my_ui.init_ui();
 
 	// Interactively query missing information
+	if ((has_midi_in == false) && (has_midi_out == false))
+	{
+		bool ret = my_ui.probe_synth();
+		if (ret == false)
+		{
+			if (my_ui.get_error() == true)
+			{
+				my_ui.shut_ui();
+				cout << "ERROR:\nAn error occured during automatic synth detection.\n";
+				cout << my_ui.get_error_msg() << endl;
+				return 1;
+			}
+		}
+		else // Synth probe successful
+		{
+			has_midi_in = true;
+			has_midi_out = true;
+			has_dev_id = true;
+		}
+	}
 	if (has_midi_in == false)
 	{
 		has_midi_in = my_ui.change_port('i');

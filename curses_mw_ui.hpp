@@ -44,11 +44,16 @@ class Curses_mw_ui
 		void set_cfg_file_name(std::string name) { its_cfg_file_name = name; }
 		std::string get_error_msg() const { return its_error_msg; }
 		bool get_error() const { return its_error_flag.load(); }
+			// local part of port discovery RtMidi callback
+		void discover_port(std::vector<unsigned char> *message);
+			// Local part of dev ID discovery RtMidi callback
+		void discover_id(std::vector<unsigned char> *message);
 
 			// UI screen functions
 		void print_main_screen(); // just print the main screen again
 		bool change_port(char port_designation); // Change MIDI I or O port
 		void change_dev_id(); // Change device ID
+		bool probe_synth(); // probe for the synth (MWII/XT for now)
 		bool write_cfg(); // Write configuration to file
 		void init_ui(); // Set up curses UI
 		void shut_ui(); // Shut down curses UI
@@ -69,11 +74,17 @@ class Curses_mw_ui
 		int its_ch; // character input by user
 		RtMidiIn *its_midi_in; // MIDI input port
 		RtMidiOut *its_midi_out; // MIDI output port
+		std::atomic_bool its_discovery_flag; // used for port/dev_id probing
+		unsigned char its_suggested_dev_id; // used for synth probing
 		Synth_info *its_synth_info; // data class holding synth specific info
 		Curses_mw_miner *its_mw_miner;
 };
 
 // Callback function to be passed to RtMidiIn, user_data the Mw_miner
 void mw_midi_callback(double deltatime, std::vector<unsigned char>* message, void * user_data);
+// RtMidi callback function for synth probing, user_data is the
+// Curses_mw_ui object
+void mw_port_discovery_callback(double deltatime,std::vector<unsigned char> *message,void *user_data);
+void mw_dev_id_discovery_callback(double deltatime,std::vector<unsigned char> *message, void *user_data);
 
 #endif // #ifndef _MWSD_CURSES_MW_UI_HPP_
