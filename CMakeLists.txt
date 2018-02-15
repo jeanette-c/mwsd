@@ -35,7 +35,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin") # if this is Mac OS
 	set(Boost_USE_STATIC_LIBS ON) # for MAC OS
 	set(Boost_USE_STATIC_RUNTIME ON) # for MAC OS
 endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-find_package(Boost 1.63 REQUIRED COMPONENTS program_options system)
+find_package(Boost 1.58 REQUIRED COMPONENTS program_options system)
 if (Boost_PROGRAM_OPTIONS_FOUND)
 	message(STATUS "found libboost_program_options")
 	set (INCS ${INCS} ${Boost_INCLUDE_DIRS})
