@@ -31,6 +31,7 @@ Libraries:
 	ncurses - for output to the screen
 	RtMidi - for MIDI I/O
 	boost_program_options - to read commandline options and the config file
+	boost_filesystem - to deal with the configuration file and resource folder
 	The rest should be system standard
 Standard development tools (a c++ compiler, linker, make, etc.)
 CMake - to build the software
