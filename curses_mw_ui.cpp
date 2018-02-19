@@ -32,8 +32,8 @@ using std::ofstream;
 using std::thread;
 using std::vector;
 
-Curses_mw_ui::Curses_mw_ui():
-	its_x(3), its_y(3), its_ch(0),
+Curses_mw_ui::Curses_mw_ui(string res_dir):
+	its_x(3), its_y(3), its_ch(0), its_res_dir(res_dir),
 	its_cfg_file_name(""), its_error_msg(""),
 	its_midi_input_name("In"), its_midi_output_name("Out"),
 	its_status_line(17), its_error_line(18), its_suggested_dev_id(0x7f)
@@ -562,7 +562,8 @@ bool Curses_mw_ui::write_cfg()
 	cfg_out << "# Configuration file for " << PACKAGE_STRING << endl;
 	cfg_out << "input_port = " << its_midi_input_name << "\n";
 	cfg_out << "output_port = " << its_midi_output_name << "\n";
-	cfg_out << "device_id = " << (unsigned short int)its_synth_info->get_dev_id();
+	cfg_out << "device_id = " << (unsigned short int)its_synth_info->get_dev_id() << "\n";
+	cfg_out << "resource_folder = " << its_res_dir;
 	cfg_out.close();
 	return true;
 }

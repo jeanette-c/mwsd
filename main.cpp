@@ -19,6 +19,8 @@
 #include "config.h"
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
 #include <iterator>
 #include <cstdlib>
 #include <iostream>
@@ -39,9 +41,11 @@ int main(int argc, char *argv[])
 {
 	// Set up config filename
 	string cfg_file_name;
+	string res_dir; // path to resource folder
 	char *home_path = getenv("HOME");
+	res_dir = string(home_path) + string("/.mwsd");
 	cfg_file_name = string(home_path) + string("/.mwsd.cfg");
-	Curses_mw_ui my_ui; // The main UI object
+	Curses_mw_ui my_ui(res_dir); // The main UI object
 
 	// Parse options on commandline and from config file
 	// These flags are set, once values have been determined
@@ -55,7 +59,7 @@ int main(int argc, char *argv[])
 			("help,h", "Show this help")
 			("version,v","Show version information")
 			("list_ports,l", "List available MIDI input and output ports")
-			("config_file,c", po::value<string>(&cfg_file_name)->value_name("filename"), "Use a different configuration file")
+			("config_file,c", po::value<string>()->value_name("filename"), "Use a different configuration file")
 		;
 		po::options_description config_desc("Configuration options");
 		config_desc.add_options()
@@ -63,6 +67,7 @@ int main(int argc, char *argv[])
 			("output_port,o", po::value<string>()->value_name("port_name"), "Set the MIDI output port")
 			("io_ports,p", po::value<string>()->value_name("port_name"), "Set input and output MIDI ports.")
 			("device_id,d", po::value<unsigned short int>()->value_name("ID"), "Set the device ID")
+			("resource_folder,r", po::value<string>()->value_name("path"), "Set a different resource folder")
 		;
 		po::options_description commandline_desc;
 		commandline_desc.add(info_desc).add(config_desc);
@@ -70,9 +75,29 @@ int main(int argc, char *argv[])
 		store(po::parse_command_line(argc,argv,commandline_desc), vm);
 		notify(vm);
 
+		if (vm.count("resource_folder"))
+		{
+			res_dir = vm["resource_folder"].as<string>();
+			my_ui.set_res_dir(res_dir);
+		}
+
 		if (vm.count("config_file"))
 		{
 			cfg_file_name = vm["config_file"].as<string>();
+			fs::path cfg_file_cmd_path(cfg_file_name);
+			if (fs::exists(cfg_file_cmd_path))
+			{
+				if (!fs::is_regular_file(cfg_file_cmd_path))
+				{
+					cout << "ERROR:\nThe specified configuration file " << cfg_file_name << " exists, but is not a regular file.\n";
+					return 1;
+				}
+			}
+			else // the path doesn't exist at all
+			{
+				cout << "ERROR:\nThe specified configuration file " << cfg_file_name << " does not exist.\n";
+				return 1;
+			}
 		}
 
 		if (vm.count("io_ports"))
@@ -110,7 +135,9 @@ int main(int argc, char *argv[])
 		if (vm.count("version"))
 		{
 			cout << PACKAGE_STRING << endl;
-			cout << "Released 02.2018\n";
+			cout << "\t(Released 02.2018)\n";
+			cout << "Copyright (c) 2018 by Jeanette C.\n";
+			cout << "This is free software released under the terms of the GPL version 3.\n";
 			return 0;
 		}
 
@@ -156,7 +183,26 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	// Set resource and config file name Create resource dir, if it doesn't exist.
+	my_ui.set_res_dir(res_dir);
 	my_ui.set_cfg_file_name(cfg_file_name);
+	fs::path res_path(res_dir);
+	if (!fs::exists(res_path))
+	{
+		if (!fs::create_directory(res_path))
+		{
+			cout << "ERROR:\nCould not create resource folder " << res_dir << "\n";
+			return 1;
+		}
+	}
+	else // the resource path exists
+	{
+		if (!fs::is_directory(res_path))
+		{
+			cout << "ERROR:\nThe name of the resource folder " << res_dir << " exists,\nbut is no directory.\n";
+			return 1;
+		}
+	}
 
 	my_ui.init_ui();
 
@@ -216,6 +262,13 @@ int main(int argc, char *argv[])
 	if (has_dev_id == false)
 	{
 		my_ui.change_dev_id();
+	}
+
+	// If config file doesn't exist, write it now
+	fs::path cfg_file_path(cfg_file_name);
+	if (!fs::exists(cfg_file_path))
+	{
+		my_ui.write_cfg();
 	}
 
 	my_ui.run();

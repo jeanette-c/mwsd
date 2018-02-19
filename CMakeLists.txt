@@ -29,13 +29,13 @@ else (CURSES_FOUND)
 	message(FATAL_ERROR "libncurses or libncursesw required but not found")
 endif (CURSES_FOUND)
 
-# find libboost_program_options
+# find libboost_program_options and libboost_filesystem
 set(Boost_USE_MULTITHREADED ON) # use multithreaded versions
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin") # if this is Mac OS
 	set(Boost_USE_STATIC_LIBS ON) # for MAC OS
 	set(Boost_USE_STATIC_RUNTIME ON) # for MAC OS
 endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-find_package(Boost 1.58 REQUIRED COMPONENTS program_options system)
+find_package(Boost 1.58 REQUIRED COMPONENTS program_options filesystem system)
 if (Boost_PROGRAM_OPTIONS_FOUND)
 	message(STATUS "found libboost_program_options")
 	set (INCS ${INCS} ${Boost_INCLUDE_DIRS})
@@ -43,6 +43,13 @@ if (Boost_PROGRAM_OPTIONS_FOUND)
 else (Boost_PROGRAM_OPTIONS_FOUND)
 	message(FATAL_ERROR "libboost_program_options is required but not found")
 endif (Boost_PROGRAM_OPTIONS_FOUND)
+
+if (Boost_FILESYSTEM_FOUND)
+	message(STATUS "Found libboost_filesystem")
+	set(LIBS ${LIBS} ${Boost_FILESYSTEM_LIBRARY})
+else (Boost_FILESYSTEM_FOUND)
+	message(FATAL_ERROR "libboost_filesystem is required but not found")
+endif (Boost_FILESYSTEM_FOUND)
 
 # find RtMidi
 find_package (RTMIDI REQUIRED)

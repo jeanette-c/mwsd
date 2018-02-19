@@ -32,7 +32,7 @@ class Curses_mw_ui
 {
 	public:
 			// Constructor and destructor
-		Curses_mw_ui();
+		Curses_mw_ui(std::string res_dir);
 		~Curses_mw_ui();
 
 			// Access methods
@@ -42,6 +42,7 @@ class Curses_mw_ui
 		bool set_midi_output(int port_number);
 		bool set_midi_output(std::string port_name);
 		void set_cfg_file_name(std::string name) { its_cfg_file_name = name; }
+		void set_res_dir(std::string res_dir) { its_res_dir = res_dir; }
 		std::string get_error_msg() const { return its_error_msg; }
 		bool get_error() const { return its_error_flag.load(); }
 			// local part of port discovery RtMidi callback
@@ -60,6 +61,7 @@ class Curses_mw_ui
 		bool run(); // main event UI loop
 		void list_ports(); // print a list of MIDI I/O ports to stdout
 	private:
+		std::string its_res_dir; // Path to the resources folder
 		std::string its_cfg_file_name; // name of the attached config file
 		std::string its_midi_name; // Port name for MIDI I/O ports
 		std::string its_midi_input_name; // name of connected input port
