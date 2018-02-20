@@ -25,9 +25,9 @@ if (CURSES_FOUND AND CURSES_HAVE_NCURSES_H)
 	message(STATUS "Found libncurses or libncursesw")
 	set (INCS ${INCS} ${CURSES_INCLUDE_DIRS})
 	set (LIBS ${LIBS} ${CURSES_LIBRARIES})
-else (CURSES_FOUND)
+else (CURSES_FOUND AND CURSES_HAVE_NCURSES_H)
 	message(FATAL_ERROR "libncurses or libncursesw required but not found")
-endif (CURSES_FOUND)
+endif (CURSES_FOUND AND CURSES_HAVE_NCURSES_H)
 
 # find libboost_program_options and libboost_filesystem
 set(Boost_USE_MULTITHREADED ON) # use multithreaded versions
