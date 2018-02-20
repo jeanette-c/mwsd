@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map> // for collection of dump/request commands
 
 /* Synth_info - a data storage class holding basic information about a synth
  * manufacturer ID, equipment ID, device ID (if supported),
@@ -49,6 +50,8 @@ class Synth_info
 		unsigned int get_disp_cols() const { return its_disp_cols; }
 		unsigned int get_disp_rows() const { return its_disp_rows; }
 		const std::vector<unsigned char>& get_disp_req() const { return its_disp_req; }
+			// Return name of cmd or empty string
+		std::string get_dump_name(unsigned char cmd);
 		void set_dev_id(unsigned char dev_id); // set dev_id and adapt disp_req vector
 		void prepare_disp(std::vector<unsigned char>* syx_msg, \
 			std::vector<std::string>* disp); // put formatted
@@ -62,6 +65,7 @@ class Synth_info
 		unsigned int its_disp_cols;
 		unsigned int its_disp_rows;
 		std::vector<unsigned char> its_disp_req; // full display request SysEx
+		std::unordered_map<unsigned char,std::string> its_dump_cmds; // dump commands
 };
 
 #endif // #ifndef _SYNTH_INFO_HPP_

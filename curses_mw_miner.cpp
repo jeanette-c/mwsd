@@ -356,53 +356,19 @@ void Curses_mw_miner::print_thru()
 	}
 	if (its_old_midi_msg[0] == 0xf0) // it's SysEx
 	{
-		// JBS: in future query synth_info for command type
-		switch(cmd_byte)
+		// Examine SysEx for type and gracefully handle long dumps
+			  std::string cmd_name = its_synth_info->get_dump_name(cmd_byte);
+		if (!cmd_name.empty())
 		{
-			case 0x10:
+			mvwprintw(window,3,2,"%s dump",cmd_name.c_str());
+		}
+		else
+		{
+			int i = 0; // column to print the byte
+			for (auto byte: its_old_midi_msg)
 			{
-				mvwprintw(window,3,2,"Sound dump");
-				break;
-			}
-			case 0x11:
-			{
-				mvwprintw(window,3,2,"Multi dump");
-				break;
-			}
-			case 0x12:
-			{
-				mvwprintw(window,3,2,"Wave dump");
-				break;
-			}
-			case 0x13:
-			{
-				mvwprintw(window,3,2,"WaveTable dump");
-				break;
-			}
-			case 0x14:
-			{
-				mvwprintw(window,3,2,"Global parameter dump");
-				break;
-			}
-			case 0x16:
-			{
-				mvwprintw(window,3,2,"Remote dump");
-				break;
-			}
-			case 0x17:
-			{
-				mvwprintw(window,3,2,"Mode dump");
-				break;
-			}
-			default:
-			{
-				int i = 0; // column to print the byte
-				for (auto byte: its_old_midi_msg)
-				{
-					mvwprintw(window,3,(2 + (3*i)),"%02x",byte);
-					i++;
-				}
-				break;
+				mvwprintw(window,3,(2 + (3*i)),"%02x",byte);
+				i++;
 			}
 		}
 	}

@@ -22,6 +22,8 @@
 
 using std::vector;
 using std::string;
+using std::unordered_map;
+using std::out_of_range;
 
 Synth_info::Synth_info(unsigned char man_id, unsigned char equip_id, \
 	unsigned char dev_id, unsigned char disp_req_cmd, \
@@ -39,6 +41,17 @@ Synth_info::Synth_info(unsigned char man_id, unsigned char equip_id, \
 	its_disp_req.push_back(its_disp_req_cmd);
 	its_disp_req.push_back(0x00);
 	its_disp_req.push_back(0xf7);
+	
+		// Set up list/map of all dump commands
+	its_dump_cmds.reserve(10);
+	its_dump_cmds.emplace(0x10,string("sound"));
+	its_dump_cmds.emplace(0x11,string("multi"));
+	its_dump_cmds.emplace(0x12,string("wave"));
+	its_dump_cmds.emplace(0x13,string("wave control table"));
+	its_dump_cmds.emplace(0x14,string("global parameter"));
+	its_dump_cmds.emplace(0x15,string("display"));
+	its_dump_cmds.emplace(0x26,string("remote"));
+	its_dump_cmds.emplace(0x17,string("mode"));
 }
 
 void Synth_info::set_dev_id(unsigned char dev_id)
@@ -68,4 +81,17 @@ void Synth_info::prepare_disp(vector<unsigned char>* syx_msg, vector<string>* di
 			disp->push_back(tmp_msg.substr(40*i,40));
 		}
 	}
+}
+
+string Synth_info::get_dump_name(unsigned char cmd)
+{
+	string cmd_name("");
+	try
+	{
+		cmd_name = its_dump_cmds.at(cmd);
+	}
+	catch (out_of_range& e)
+	{
+	}
+	return cmd_name;
 }
