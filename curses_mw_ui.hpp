@@ -49,18 +49,22 @@ class Curses_mw_ui
 		void discover_port(std::vector<unsigned char> *message);
 			// Local part of dev ID discovery RtMidi callback
 		void discover_id(std::vector<unsigned char> *message);
+		std::string trim(char*) const;
 
 			// UI screen functions
 		void print_main_screen(); // just print the main screen again
+		void print_help(); // print help screen
 		bool change_port(char port_designation); // Change MIDI I or O port
 		void change_dev_id(); // Change device ID
 		bool probe_synth(); // probe for the synth (MWII/XT for now)
+		bool save_dump(); // Save last MIDI message, if it's a dump
 		bool write_cfg(); // Write configuration to file
 		void init_ui(); // Set up curses UI
 		void shut_ui(); // Shut down curses UI
 		bool run(); // main event UI loop
 		void list_ports(); // print a list of MIDI I/O ports to stdout
 	private:
+		bool its_use_res_dir; // use the directory if true
 		std::string its_res_dir; // Path to the resources folder
 		std::string its_cfg_file_name; // name of the attached config file
 		std::string its_midi_name; // Port name for MIDI I/O ports

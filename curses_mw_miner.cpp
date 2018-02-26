@@ -20,6 +20,7 @@
 
 #include <thread>
 #include <chrono>
+#include <fstream>
 #include "curses_mw_miner.hpp"
 
 // Constructor: initialise flags, set values from params and create window
@@ -443,4 +444,39 @@ void Curses_mw_miner::focus()
 {
 	wmove(window,its_y,its_x);
 	wrefresh(window);
+}
+
+std::string Curses_mw_miner::get_last_type() const
+{
+	if (its_old_midi_msg[0] != 0xf0) // not SysEx
+	{
+		return std::string();
+	}
+	else
+	{
+		if (its_old_midi_msg.size() <5) // probably incomplete sysEx
+		{
+			return std::string();
+		}
+		else
+		{
+			return its_synth_info->get_dump_name(its_old_midi_msg[4]);
+		}
+	}
+}
+
+bool Curses_mw_miner::write_last_dump(std::string filename)
+{
+	bool return_value = true;
+	std::ofstream fout(filename.c_str(), std::ios::out | std::ios::binary);
+	if (!fout.bad())
+	{
+		fout.write((const char*)&its_old_midi_msg[0],its_old_midi_msg.size());
+		fout.close();
+	}
+	else
+	{
+		return_value = false;
+	}
+	return return_value;
 }

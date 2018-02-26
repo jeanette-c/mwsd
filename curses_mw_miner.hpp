@@ -64,6 +64,8 @@ class Curses_mw_miner {
 		void focus(); // just move the cursor into the data window
 		void process_cmd(int ch); // process user input from main thread
 		void print_msg(); // wrapper function for printing data
+		std::string get_last_type() const; // return dump type of last msg or empty
+		bool write_last_dump(std::string filename);
 	private:
 			// Private methods
 		void print_thru(); // print direct data

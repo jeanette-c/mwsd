@@ -23,6 +23,10 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <cmath>
+#include <cstring>
+#include <cctype>
+#include <form.h>
 #include "curses_mw_ui.hpp"
 
 using std::string;
@@ -31,12 +35,16 @@ using std::endl;
 using std::ofstream;
 using std::thread;
 using std::vector;
+using std::ceil;
+using std::strlen;
+using std::isspace;
 
 Curses_mw_ui::Curses_mw_ui(string res_dir):
 	its_x(3), its_y(3), its_ch(0), its_res_dir(res_dir),
 	its_cfg_file_name(""), its_error_msg(""),
 	its_midi_input_name("In"), its_midi_output_name("Out"),
-	its_status_line(17), its_error_line(18), its_suggested_dev_id(0x7f)
+	its_status_line(17), its_error_line(18), its_suggested_dev_id(0x7f),
+		  its_use_res_dir(true)
 {
 	its_midi_name = string("MWII Display");
 	its_midi_in = new RtMidiIn(RtMidi::Api::UNSPECIFIED,its_midi_name);
@@ -266,37 +274,7 @@ void Curses_mw_ui::print_main_screen()
 		mvwprintw(its_win,cur_line,3,"MIDI output port: %s",its_midi_output_name.c_str());
 		cur_line++;
 	}
-	
-	// Print a line of dashes
-	for (int i = 1;i<79;i++)
-	{
-		mvwprintw(its_win,cur_line,i,"-");
-	}
-	cur_line++;
-
-	mvwprintw(its_win,cur_line,5,"The following commands are available:");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"Cursor UP - move up one line in the data display");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"Cursor DOWN - move down one line in the data display");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"SPACE - toggle contnuous display mode");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"d - toggle direct data / display on demand mode");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"p - probe for a synth (autodetect)");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"i - set new MIDI input port");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"o - set new MIDI output port");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"r - redraw screen");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"v - change device ID");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"w - write configuration to config file");
-	cur_line++;
-	mvwprintw(its_win,cur_line,3,"q - quit %s",PACKAGE_NAME);
+	mvwprintw(its_win,cur_line,3,"Press 'Q' to quit or press 'H' for help on further commands");
 	if (its_mw_miner->get_paused() == true)
 	{
 		mvwprintw(its_win,its_status_line,2,"[Paused]");
@@ -319,10 +297,160 @@ void Curses_mw_ui::print_main_screen()
 			}
 		}
 	}
+	if (its_use_res_dir == true)
+	{
+		mvwprintw(its_win,its_status_line,42,"[Using resource folder]");
+	}
+	else
+	{
+		mvwprintw(its_win,its_status_line,42,"[Not using resource folder]");
+	}
 	its_y = its_status_line;
 	its_x = 2;
 	wmove(its_win,its_y,its_x);
 	wrefresh(its_win);
+}
+
+// Print help screen
+void Curses_mw_ui::print_help()
+{
+	bool local_quit = false; // Set to true when leaving help screen
+
+	// Prepare window and print header
+	wclear(its_win);
+	box(its_win,0,0);
+	mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
+	mvwprintw(its_win,2,3,"Press 'H' to leave the help screen, PGUP/PGDOWN to scroll");
+
+	// Set up messages and paging system
+	vector<string> content; // List of commands to print
+	content.reserve(14);
+	content.push_back(string("Cursor UP - Move one line up in the display window"));
+	content.push_back(string("Cursor DOWN - Move one line down in the display ewindow"));
+	content.push_back(string("SPACE - Toggle direct data/display on demand modes"));
+	content.push_back(string("D - Turn continuous display mode on/off"));
+	content.push_back(string("H - Turn help mode on/off"));
+	content.push_back(string("Q - Quit the program"));
+	content.push_back(string("I - Select a new MIDI input"));
+	content.push_back(string("O - Select a new MIDI output"));
+	content.push_back(string("P - Probe for a Micorwave II/Xt synthesizer"));
+	content.push_back(string("R - Redraw the screen"));
+	content.push_back(string("S - Save the last SysEx message, if it's a data dump"));
+	content.push_back(string("U - Toggle use of resource folder"));
+	content.push_back(string("V - Select a new device ID"));
+	content.push_back(string("W - Write the configuration file"));
+	int start_line = 3;
+	int num_lines = (its_status_line - start_line); // Available screen lines
+	int num_pages = ceil(content.size() / float(num_lines)); // number of pages
+	unsigned int cur_page = 0; // number of current page
+	unsigned int max_msg = 0; // maximum message index to print
+
+	// print first page
+	if (content.size() < (num_lines * (cur_page +1) -1))
+	{
+		max_msg = content.size();
+	}
+	else
+	{
+		max_msg = (num_lines * (cur_page + 1));
+	}
+	int cur_line = start_line;
+	for (int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
+	{
+		mvwprintw(its_win,cur_line,2,"%s",content[i].c_str());
+	}
+	wmove(its_win,2,1);
+	wrefresh(its_win);
+
+	while ((its_mw_miner->get_quit()) != true && (local_quit == false))
+	{
+		its_ch = getch();
+		switch(its_ch)
+		{
+			case KEY_PPAGE:
+			{
+				if (cur_page == 0)
+				{
+					beep();
+				}
+				else
+				{
+					cur_page--;
+					if (content.size() < (num_lines * (cur_page +1) - 1))
+					{
+						max_msg = content.size();
+					}
+					else
+					{
+						max_msg = (num_lines * (cur_page + 1));
+					}
+					cur_line = start_line;
+					wclear(its_win);
+					box(its_win,0,0);
+					mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
+					mvwprintw(its_win,2,3,"Press 'H' to leave the help screen, PGUP/PGDOWN to scroll");
+					for (int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
+					{
+						mvwprintw(its_win,cur_line,2,"%s",content[i].c_str());
+					}
+					wmove(its_win,2,1);
+					wrefresh(its_win);
+				}
+				break;
+			}
+			case KEY_NPAGE:
+			{
+				if (cur_page == (num_pages -1))
+				{
+					beep();
+				}
+				else
+				{
+					cur_page++;
+					if (content.size() < (num_lines * (cur_page +1) - 1))
+					{
+						max_msg = content.size();
+					}
+					else
+					{
+						max_msg = (num_lines * (cur_page + 1));
+					}
+					cur_line = start_line;
+					wclear(its_win);
+					box(its_win,0,0);
+					mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
+					mvwprintw(its_win,2,3,"Press 'H' to leave the help screen, PGUP/PGDOWN to scroll");
+					for (int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
+					{
+						mvwprintw(its_win,cur_line,2,"%s",content[i].c_str());
+					}
+					wmove(its_win,2,1);
+					wrefresh(its_win);
+				}
+				break;
+			}
+			case 'q':
+			case 'Q':
+			{
+				its_mw_miner->set_quit(true);
+				break;
+			}
+			case 'h':
+			case 'H':
+			{
+				local_quit = true;
+				break;
+			}
+			default:
+			{
+				if (its_ch != ERR)
+				{
+					beep();
+				}
+				break;
+			}
+		}
+	}
 }
 
 bool Curses_mw_ui::change_port(char designation)
@@ -424,8 +552,8 @@ bool Curses_mw_ui::change_port(char designation)
 				search_quit = true;
 				break;
 			}
-			case 81:
-			case 113: // Q or q
+			case 'q':
+			case 'Q':
 			{
 				search_quit = true;
 				break;
@@ -523,8 +651,8 @@ void Curses_mw_ui::change_dev_id()
 				search_quit = true;
 				break;
 			}
-			case 81:
-			case 113: // q or Q
+			case 'q':
+			case 'Q':
 			{
 				search_quit = true;
 				break;
@@ -623,6 +751,140 @@ void Curses_mw_ui::shut_ui()
 	endwin();
 }
 
+// Trim leading and trailing whitespaces, copied from fields_magic.c, a simple
+// example of the curses form library
+string Curses_mw_ui::trim(char *str) const
+{
+	char *end;
+	
+	// Trim leading space
+	while(isspace(*str))
+	{
+		str++;
+	}
+	if(*str == 0) // all spaces?
+	{
+		return string();
+	}
+	// trim trailing space
+	end = str + strlen(str) - 1;
+	while(end > str && isspace(*end))
+	{
+		end--;
+	}
+	// write new null terminator
+	*(end+1) = '\0';
+	return string(str);
+}
+
+// Save last MIDI message, if it's a data dump
+bool Curses_mw_ui::save_dump()
+{
+	bool return_value = true;
+	string msg_type = its_mw_miner->get_last_type();
+	if (msg_type.empty())
+	{
+		return false;
+	}
+	else // It's some kind of dump
+	{
+		if (msg_type.compare("display") == true)
+		{
+			return false;
+		}
+		else // it's not a display dump, so save
+		{
+			bool local_quit = false; // set to true, when quitting
+			string filename;
+			wclear(its_win);
+			box(its_win,0,0);
+			mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
+			mvwprintw(its_win,2,2,"Enter filename, press return to confirm, or q to quit without saving");
+			FIELD *fields[3];
+			FORM *form;
+			fields[0] = new_field(1,9,1,0,0,0);
+			fields[1] = new_field(1,64,1,10,0,0);
+			fields[2] = NULL;
+			set_field_buffer(fields[0],0,"Filename:");
+			set_field_opts(fields[0],O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
+			set_field_opts(fields[1],O_VISIBLE | O_PUBLIC | O_EDIT | O_ACTIVE);
+			set_field_pad(fields[1],'_');
+			form = new_form(fields);
+			set_form_win(form,its_win);
+			set_form_sub(form,derwin(its_win,2,78,3,1));
+			post_form(form);
+			refresh();
+			wrefresh(its_win);
+			while ((local_quit == false) && (its_mw_miner->get_quit() == false))
+			{
+				its_ch = getch();
+				switch(its_ch)
+				{
+					case KEY_LEFT:
+					{
+						form_driver(form, REQ_PREV_CHAR);
+						break;
+					}
+					case KEY_RIGHT:
+					{
+						form_driver(form, REQ_NEXT_CHAR);
+						break;
+					}
+					case KEY_BACKSPACE:
+					case 127:
+					{
+						form_driver(form, REQ_DEL_PREV);
+						break;
+					}
+					case KEY_DC:
+					{
+						form_driver(form, REQ_DEL_CHAR);
+						break;
+					}
+					case 27:
+					{
+						local_quit = true;
+						break;
+					}
+					case 10: // Return
+					{
+						form_driver(form, REQ_PREV_FIELD);
+						form_driver(form, REQ_NEXT_FIELD);
+						filename = trim(field_buffer(fields[1],0));
+						if (!filename.empty())
+						{
+							if (its_use_res_dir == true)
+							{
+								filename = its_res_dir + string("/") + filename;
+							}
+							return_value = its_mw_miner->write_last_dump(filename);
+							if (return_value == false)
+							{
+								its_error_msg = string("Couldn't save ") + msg_type + string(" dump to ") + filename;
+							}
+						}
+						local_quit = true;
+						break;
+					}
+					default:
+					{
+						if (its_ch != ERR)
+						{
+							form_driver(form,its_ch);
+						}
+						break;
+					}
+				}
+				wrefresh(its_win);
+			}
+			free_form(form);
+			free_field(fields[1]);
+			wclear(its_win);
+		}
+	}
+	return return_value;
+}
+
 // Main UI event loop for the program
 bool Curses_mw_ui::run()
 {
@@ -642,7 +904,7 @@ bool Curses_mw_ui::run()
 		its_ch = getch();
 		switch(its_ch)
 		{
-			case 32: // SPACE bar
+			case ' ':
 			{
 				ret = its_mw_miner->get_thru();
 				its_mw_miner->set_thru(!ret);
@@ -664,8 +926,8 @@ bool Curses_mw_ui::run()
 				}
 				break;
 			}
-			case 68:
-			case 100: // d or D
+			case 'd':
+			case 'D':
 			{
 				ret = its_mw_miner->get_disp();
 				its_mw_miner->set_disp(!ret);
@@ -690,14 +952,33 @@ bool Curses_mw_ui::run()
 				its_mw_miner->process_cmd(its_ch);
 				break;
 			}
-			case 81:
-			case 113: // q or Q
+			case 'q':
+			case 'Q':
 			{
 				its_mw_miner->set_quit(true);
 				break;
 			}
-			case 87:
-			case 119: // w or W
+			case 'h':
+			case 'H':
+			{
+				print_help();
+				print_main_screen();
+				break;
+			}
+			case 's':
+			case 'S':
+			{
+				bool ret = save_dump();
+				print_main_screen();
+				if ((ret == false) && (its_error_msg.empty() == false))
+				{
+					mvwprintw(its_win,its_error_line,2,"%s",its_error_msg.c_str());
+					its_error_msg.clear();
+				}
+				break;
+			}
+			case 'w':
+			case 'W':
 			{
 				ret = write_cfg();
 				if (ret == false && its_error_flag == false)
@@ -717,8 +998,8 @@ bool Curses_mw_ui::run()
 				}
 				break;
 			}
-			case 73:
-			case 105: // i or I
+			case 'i':
+			case 'I':
 			{
 				its_mw_miner->set_paused(true);
 				ret = change_port('i');
@@ -743,8 +1024,8 @@ bool Curses_mw_ui::run()
 				its_mw_miner->focus();
 				break;
 			}
-			case 79:
-			case 111: // o or O
+			case 'o':
+			case 'O':
 			{
 				its_mw_miner->set_paused(true);
 				ret = change_port('o');
@@ -769,16 +1050,23 @@ bool Curses_mw_ui::run()
 				its_mw_miner->focus();
 				break;
 			}
-			case 86:
-			case 118: // v or V
+			case 'u':
+			case 'U':
+			{
+				its_use_res_dir = !its_use_res_dir;
+				print_main_screen();
+				break;
+			}
+			case 'v':
+			case 'V':
 			{
 				change_dev_id();
 				print_main_screen();
 				its_mw_miner->focus();
 				break;
 			}
-			case 80:
-			case 112: // p or P
+			case 'p':
+			case 'P':
 			{
 				its_mw_miner->set_paused(true);
 				bool ret = probe_synth();
@@ -800,8 +1088,8 @@ bool Curses_mw_ui::run()
 				print_main_screen();
 				break;
 			}
-			case 82:
-			case 114: // r or R
+			case 'r':
+			case 'R':
 			{
 				print_main_screen();
 				its_mw_miner->focus();
@@ -1051,8 +1339,8 @@ bool Curses_mw_ui::probe_synth()
 					found = true;
 					break;
 				}
-				case 81:
-				case 113: // q or Q
+				case 'q':
+				case 'Q':
 				{
 					return_value = false;
 					search_quit = true;
