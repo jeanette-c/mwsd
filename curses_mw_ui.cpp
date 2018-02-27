@@ -968,6 +968,7 @@ bool Curses_mw_ui::run()
 			case 's':
 			case 'S':
 			{
+				its_mw_miner->set_paused(true);
 				bool ret = save_dump();
 				print_main_screen();
 				if ((ret == false) && (its_error_msg.empty() == false))
@@ -975,6 +976,7 @@ bool Curses_mw_ui::run()
 					mvwprintw(its_win,its_error_line,2,"%s",its_error_msg.c_str());
 					its_error_msg.clear();
 				}
+				its_mw_miner->set_paused(false);
 				break;
 			}
 			case 'w':
