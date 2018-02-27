@@ -437,6 +437,7 @@ void Curses_mw_ui::print_help()
 			}
 			case 'h':
 			case 'H':
+			case 27:
 			{
 				local_quit = true;
 				break;
@@ -554,6 +555,7 @@ bool Curses_mw_ui::change_port(char designation)
 			}
 			case 'q':
 			case 'Q':
+			case 27:
 			{
 				search_quit = true;
 				break;
@@ -653,6 +655,7 @@ void Curses_mw_ui::change_dev_id()
 			}
 			case 'q':
 			case 'Q':
+			case 27:
 			{
 				search_quit = true;
 				break;
@@ -796,23 +799,31 @@ bool Curses_mw_ui::save_dump()
 		{
 			bool local_quit = false; // set to true, when quitting
 			string filename;
+			filename = its_mw_miner->get_suggested_dump_filename();
 			wclear(its_win);
 			box(its_win,0,0);
 			mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
-			mvwprintw(its_win,2,2,"Enter filename, press return to confirm, or q to quit without saving");
-			FIELD *fields[3];
+			mvwprintw(its_win,2,2,"Enter filename, press return to confirm, or escape to quit without saving");
+			FIELD *fields[5];
 			FORM *form;
 			fields[0] = new_field(1,9,1,0,0,0);
-			fields[1] = new_field(1,64,1,10,0,0);
-			fields[2] = NULL;
+			fields[1] = new_field(1,1,1,10,0,0);
+			fields[2] = new_field(1,64,1,11,0,0);
+			fields[3] = new_field(1,1,1,75,0,0);
+			fields[4] = NULL;
 			set_field_buffer(fields[0],0,"Filename:");
+			set_field_buffer(fields[1],0,"[");
+			set_field_buffer(fields[2],0,filename.c_str());
+			set_field_buffer(fields[3],0,"]");
 			set_field_opts(fields[0],O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
-			set_field_opts(fields[1],O_VISIBLE | O_PUBLIC | O_EDIT | O_ACTIVE);
-			set_field_pad(fields[1],'_');
+			set_field_opts(fields[1],O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
+			set_field_opts(fields[2],O_VISIBLE | O_PUBLIC | O_EDIT | O_ACTIVE);
+			set_field_opts(fields[3],O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
 			form = new_form(fields);
 			set_form_win(form,its_win);
 			set_form_sub(form,derwin(its_win,2,78,3,1));
 			post_form(form);
+			form_driver(form,REQ_END_LINE);
 			refresh();
 			wrefresh(its_win);
 			while ((local_quit == false) && (its_mw_miner->get_quit() == false))
@@ -841,6 +852,17 @@ bool Curses_mw_ui::save_dump()
 						form_driver(form, REQ_DEL_CHAR);
 						break;
 					}
+					case KEY_HOME:
+					case KEY_BEG:
+					{
+						form_driver(form,REQ_BEG_LINE);
+						break;
+					}
+					case KEY_END:
+					{
+						form_driver(form,REQ_END_LINE);
+						break;
+					}
 					case 27:
 					{
 						local_quit = true;
@@ -850,7 +872,7 @@ bool Curses_mw_ui::save_dump()
 					{
 						form_driver(form, REQ_PREV_FIELD);
 						form_driver(form, REQ_NEXT_FIELD);
-						filename = trim(field_buffer(fields[1],0));
+						filename = trim(field_buffer(fields[2],0));
 						if (!filename.empty())
 						{
 							if (its_use_res_dir == true)
@@ -878,7 +900,10 @@ bool Curses_mw_ui::save_dump()
 				wrefresh(its_win);
 			}
 			free_form(form);
+			free_field(fields[0]);
 			free_field(fields[1]);
+			free_field(fields[2]);
+			free_field(fields[3]);
 			wclear(its_win);
 		}
 	}
@@ -960,6 +985,7 @@ bool Curses_mw_ui::run()
 			}
 			case 'h':
 			case 'H':
+			case KEY_F(1):
 			{
 				print_help();
 				print_main_screen();
@@ -970,13 +996,13 @@ bool Curses_mw_ui::run()
 			{
 				its_mw_miner->set_paused(true);
 				bool ret = save_dump();
+				its_mw_miner->set_paused(false);
 				print_main_screen();
 				if ((ret == false) && (its_error_msg.empty() == false))
 				{
 					mvwprintw(its_win,its_error_line,2,"%s",its_error_msg.c_str());
 					its_error_msg.clear();
 				}
-				its_mw_miner->set_paused(false);
 				break;
 			}
 			case 'w':

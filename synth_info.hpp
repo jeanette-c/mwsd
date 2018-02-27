@@ -52,6 +52,10 @@ class Synth_info
 		const std::vector<unsigned char>& get_disp_req() const { return its_disp_req; }
 			// Return name of cmd or empty string
 		std::string get_dump_name(unsigned char cmd);
+		unsigned int get_dump_bank(unsigned char cmd);
+		unsigned int get_dump_patch(unsigned char cmd);
+		unsigned int get_dump_name_start(unsigned char cmd);
+		unsigned int get_dump_name_chars(unsigned char cmd);
 		void set_dev_id(unsigned char dev_id); // set dev_id and adapt disp_req vector
 		void prepare_disp(std::vector<unsigned char>* syx_msg, \
 			std::vector<std::string>* disp); // put formatted
@@ -66,6 +70,14 @@ class Synth_info
 		unsigned int its_disp_rows;
 		std::vector<unsigned char> its_disp_req; // full display request SysEx
 		std::unordered_map<unsigned char,std::string> its_dump_cmds; // dump commands
+			// bank number of dump, if it has one
+		std::unordered_map<unsigned char,unsigned int> its_dump_bank;
+			// Patch number of dump, if it has one
+		std::unordered_map<unsigned char,unsigned int> its_dump_patch;
+			// Begin of data name, if it has one
+		std::unordered_map<unsigned char,unsigned int> its_dump_name_start;
+			// Number of name characters, if appropriate
+		std::unordered_map<unsigned char,unsigned int> its_dump_name_chars;
 };
 
 #endif // #ifndef _SYNTH_INFO_HPP_

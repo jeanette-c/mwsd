@@ -35,7 +35,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin") # if this is Mac OS
 	set(Boost_USE_STATIC_LIBS ON) # for MAC OS
 	set(Boost_USE_STATIC_RUNTIME ON) # for MAC OS
 endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-find_package(Boost 1.58 REQUIRED COMPONENTS program_options filesystem system)
+find_package(Boost 1.58 REQUIRED COMPONENTS program_options filesystem date_time system)
 if (Boost_PROGRAM_OPTIONS_FOUND)
 	message(STATUS "found libboost_program_options")
 	set (INCS ${INCS} ${Boost_INCLUDE_DIRS})
@@ -50,6 +50,13 @@ if (Boost_FILESYSTEM_FOUND)
 else (Boost_FILESYSTEM_FOUND)
 	message(FATAL_ERROR "libboost_filesystem is required but not found")
 endif (Boost_FILESYSTEM_FOUND)
+
+if (Boost_DATE_TIME_FOUND)
+	message(STATUS "Found libboost_date_time")
+	set(LIBS ${LIBS} ${Boost_DATE_TIME_LIBRARY})
+else (Boost_DATE_TIME_FOUND)
+	message(FATAL_ERROR "libboost_date_time is required but not found")
+endif (Boost_DATE_TIME_FOUND)
 
 # find RtMidi
 find_package (RTMIDI REQUIRED)

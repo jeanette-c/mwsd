@@ -42,12 +42,28 @@ Synth_info::Synth_info(unsigned char man_id, unsigned char equip_id, \
 	its_disp_req.push_back(0x00);
 	its_disp_req.push_back(0xf7);
 	
-		// Set up list/map of all dump commands
+		// Set up list/map of all dump commands and additional data
 	its_dump_cmds.reserve(10);
+	its_dump_bank.reserve(10);
+	its_dump_patch.reserve(10);
+	its_dump_name_start.reserve(2);
+	its_dump_name_chars.reserve(2);
 	its_dump_cmds.emplace(0x10,string("sound"));
+	its_dump_bank.emplace(0x10,5);
+	its_dump_patch.emplace(0x10,6);
+	its_dump_name_start.emplace(0x10,247);
+	its_dump_name_chars.emplace(0x10,16);
 	its_dump_cmds.emplace(0x11,string("multi"));
+	its_dump_bank.emplace(0x11,5);
+	its_dump_patch.emplace(0x11,6);
+	its_dump_name_start.emplace(0x11,23);
+	its_dump_name_chars.emplace(0x11,16);
 	its_dump_cmds.emplace(0x12,string("wave"));
+	its_dump_bank.emplace(0x12,5);
+	its_dump_patch.emplace(0x12,6);
 	its_dump_cmds.emplace(0x13,string("wave control table"));
+	its_dump_bank.emplace(0x13,5);
+	its_dump_patch.emplace(0x13,6);
 	its_dump_cmds.emplace(0x14,string("global parameter"));
 	its_dump_cmds.emplace(0x15,string("display"));
 	its_dump_cmds.emplace(0x26,string("remote"));
@@ -94,4 +110,56 @@ string Synth_info::get_dump_name(unsigned char cmd)
 	{
 	}
 	return cmd_name;
+}
+
+unsigned int Synth_info::get_dump_bank(unsigned char cmd)
+{
+	unsigned int bank_no = 0;
+	try
+	{
+		bank_no = its_dump_bank.at(cmd);
+	}
+	catch(out_of_range& e)
+	{
+	}
+	return bank_no;
+}
+
+unsigned int Synth_info::get_dump_patch(unsigned char cmd)
+{
+	unsigned int patch_no = 0;
+	try
+	{
+		patch_no = its_dump_patch.at(cmd);
+	}
+	catch (out_of_range& e)
+	{
+	}
+	return patch_no;
+}
+
+unsigned int Synth_info::get_dump_name_start(unsigned char cmd)
+{
+	unsigned int name_start = 0;
+	try
+	{
+		name_start = its_dump_name_start.at(cmd);
+	}
+	catch (out_of_range& e)
+	{
+	}
+	return name_start;
+}
+
+unsigned int Synth_info::get_dump_name_chars(unsigned char cmd)
+{
+	unsigned int name_chars;
+	try
+	{
+		name_chars = its_dump_name_chars.at(cmd);
+	}
+	catch (out_of_range& e)
+	{
+	}
+	return name_chars;
 }

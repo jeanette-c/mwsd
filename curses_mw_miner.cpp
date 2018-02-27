@@ -21,7 +21,15 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <iterator>
+#include <boost/date_time.hpp>
 #include "curses_mw_miner.hpp"
+
+using std::string;
+using std::to_string;
+using std::vector;
+using std::iterator;
+using boost::posix_time::ptime;
 
 // Constructor: initialise flags, set values from params and create window
 Curses_mw_miner::Curses_mw_miner(RtMidiOut *midi_out, Synth_info *synth_info)
@@ -124,7 +132,7 @@ void Curses_mw_miner::set_paused(bool paused)
 void Curses_mw_miner::run()
 {
 	std::chrono::milliseconds sleep_time(100);
-	std::vector<unsigned char> my_disp_req = its_synth_info->get_disp_req();
+	vector<unsigned char> my_disp_req = its_synth_info->get_disp_req();
 	init_win();
 	while (its_quit_flag == false)
 	{
@@ -133,7 +141,7 @@ void Curses_mw_miner::run()
 			if (its_unanswered >10)
 			{
 				its_error_flag = true;
-				its_error_msg = std::string("More than 10 unanswered requests from synthesizer.");
+				its_error_msg = string("More than 10 unanswered requests from synthesizer.");
 				set_quit(true);
 			}
 			else
@@ -178,7 +186,7 @@ void Curses_mw_miner::run()
 }
 
 // Callback function for the RtMidiIn port
-void Curses_mw_miner::accept_msg(double delta_time, std::vector<unsigned char> *message)
+void Curses_mw_miner::accept_msg(double delta_time, vector<unsigned char> *message)
 {
 	if (its_paused == false)
 	{
@@ -358,7 +366,7 @@ void Curses_mw_miner::print_thru()
 	if (its_old_midi_msg[0] == 0xf0) // it's SysEx
 	{
 		// Examine SysEx for type and gracefully handle long dumps
-			  std::string cmd_name = its_synth_info->get_dump_name(cmd_byte);
+			  string cmd_name = its_synth_info->get_dump_name(cmd_byte);
 		if (!cmd_name.empty())
 		{
 			mvwprintw(window,3,2,"%s dump",cmd_name.c_str());
@@ -446,17 +454,17 @@ void Curses_mw_miner::focus()
 	wrefresh(window);
 }
 
-std::string Curses_mw_miner::get_last_type() const
+string Curses_mw_miner::get_last_type() const
 {
 	if (its_old_midi_msg[0] != 0xf0) // not SysEx
 	{
-		return std::string();
+		return string();
 	}
 	else
 	{
 		if (its_old_midi_msg.size() <5) // probably incomplete sysEx
 		{
-			return std::string();
+			return string();
 		}
 		else
 		{
@@ -465,7 +473,7 @@ std::string Curses_mw_miner::get_last_type() const
 	}
 }
 
-bool Curses_mw_miner::write_last_dump(std::string filename)
+bool Curses_mw_miner::write_last_dump(string filename)
 {
 	bool return_value = true;
 	std::ofstream fout(filename.c_str(), std::ios::out | std::ios::binary);
@@ -479,4 +487,153 @@ bool Curses_mw_miner::write_last_dump(std::string filename)
 		return_value = false;
 	}
 	return return_value;
+}
+
+string Curses_mw_miner::get_suggested_dump_filename() const
+{
+	string filename;
+	string msg_type = get_last_type();
+	if (its_old_midi_msg.size() > 5)
+	{
+		unsigned char cmd = its_old_midi_msg.at(4);
+			// Check the message type and prepare the name accordingly
+		if (msg_type.compare("global") == 0)
+		{
+			filename = msg_type;
+		}
+		else if (msg_type.compare("remote") == 0)
+		{
+			filename = msg_type;
+		}
+		else if (msg_type.compare("wave") == 0)
+		{
+			if (its_old_midi_msg.size() == 137)
+			{
+				unsigned int bank_no = its_old_midi_msg.at(its_synth_info->get_dump_bank(cmd));
+				unsigned int patch_no = its_old_midi_msg.at(its_synth_info->get_dump_patch(cmd));
+				unsigned int wave_no = (128 * bank_no) + patch_no;
+				if (wave_no <10)
+				{
+					filename = string("000");
+				}
+				else if (wave_no <100)
+				{
+					filename = string("00");
+				}
+				else if (wave_no <1000)
+				{
+					filename = string("0");
+				}
+				filename = filename + to_string(wave_no) + string("-") + msg_type;
+			}
+			else
+			{
+				filename = string("waves");
+			}
+		}
+		else if (msg_type.compare("wave control table") == 0)
+		{
+			if (its_old_midi_msg.size() == 265)
+			{
+				unsigned int patch_no = its_old_midi_msg.at(its_synth_info->get_dump_patch(cmd));
+				if (patch_no <10)
+				{
+					filename = string("00");
+				}
+				else if (patch_no <100)
+				{
+					filename = string("0");
+				}
+				filename = filename + to_string(patch_no) + string("-") + msg_type;
+			}
+			else
+			{
+				filename = string("wave control tables");
+			}
+		}
+		else if (msg_type.compare("sound") == 0)
+		{
+			if (its_old_midi_msg.size() == 265)
+			{
+				unsigned int bank_no = its_old_midi_msg.at(its_synth_info->get_dump_bank(cmd));
+				unsigned int patch_no = its_old_midi_msg.at(its_synth_info->get_dump_patch(cmd));
+				unsigned int name_start = its_synth_info->get_dump_name_start(cmd);
+				unsigned int name_chars = its_synth_info->get_dump_name_chars(cmd);
+				string patch_name;
+				if (bank_no <= 1) // This is a sound not an edit buffer dump
+				{
+					if (bank_no == 0)
+					{
+						filename = string("A");
+					}
+					else if (bank_no == 1)
+					{
+						filename = string("B");
+					}
+					if (patch_no <10)
+					{
+						filename = filename + string("00");
+					}
+					else if (patch_no <100)
+					{
+						filename = filename + string("0");
+					}
+					filename = filename + to_string(patch_no) + string("-");
+				}
+				string tmp_name;
+				auto start_it = (its_old_midi_msg.begin() + name_start);
+				auto end_it = (start_it + name_chars);
+				tmp_name = string(start_it,end_it);
+				size_t start_pos = tmp_name.find_first_not_of(' ');
+				size_t end_pos = tmp_name.find_last_not_of(' ');
+				patch_name = tmp_name.substr(start_pos,(end_pos - start_pos +1));
+				filename = filename + patch_name;
+			}
+			else // A dump of all sounds
+			{
+				filename = string("sounds");
+			}
+		}
+		else if (msg_type.compare("multi") == 0)
+		{
+			if (its_old_midi_msg.size() == 265)
+			{
+				unsigned int bank_no = its_old_midi_msg.at(its_synth_info->get_dump_bank(cmd));
+				unsigned int patch_no = its_old_midi_msg.at(its_synth_info->get_dump_patch(cmd));
+				if (bank_no == 0) // This is a multi, not an edit buffer
+				{
+					if (patch_no <10)
+					{
+						filename = string("00");
+					}
+					else if (patch_no <100)
+					{
+						filename = string("0");
+					}
+					filename = filename + to_string(patch_no) + string("-");
+				}
+				unsigned int name_start = its_synth_info->get_dump_name_start(cmd);
+				unsigned int name_chars = its_synth_info->get_dump_name_chars(cmd);
+				string tmp_name, patch_name;
+				auto start_it = (its_old_midi_msg.begin() + name_start);
+				auto end_it = (start_it + name_chars);
+				tmp_name = string(start_it,end_it);
+				size_t start_pos = tmp_name.find_first_not_of(' ');
+				size_t end_pos = tmp_name.find_last_not_of(' ');
+				patch_name = tmp_name.substr(start_pos,(end_pos - start_pos +1));
+				filename = filename + patch_name;
+			}
+			else // It's all multis
+			{
+				filename = string("multis");
+			}
+		}
+	}
+
+	// Add the suffix of the current date and time
+	ptime now = boost::posix_time::second_clock::local_time();
+	string full_date = boost::posix_time::to_iso_string(now);
+	string time_suffix = full_date.substr(0,4) + string("-") + full_date.substr(4,2) + string("-") + full_date.substr(6,2) + string("-") + full_date.substr(9,2) + string("-") + full_date.substr(11,2) + string("-") + full_date.substr(13,2);
+	filename = filename + string("-") + time_suffix + string(".syx");
+	return filename;
 }

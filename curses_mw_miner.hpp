@@ -65,7 +65,8 @@ class Curses_mw_miner {
 		void process_cmd(int ch); // process user input from main thread
 		void print_msg(); // wrapper function for printing data
 		std::string get_last_type() const; // return dump type of last msg or empty
-		bool write_last_dump(std::string filename);
+		bool write_last_dump(std::string filename); // Write last dump to file
+		std::string get_suggested_dump_filename() const; // from the MIDI message
 	private:
 			// Private methods
 		void print_thru(); // print direct data
