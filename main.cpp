@@ -202,6 +202,15 @@ int main(int argc, char *argv[])
 			cout << "ERROR:\nThe name of the resource folder " << res_dir << " exists,\nbut is no directory.\n";
 			return 1;
 		}
+		else
+		{
+			bool ret = my_ui.check_res_dir();
+			if (ret == false)
+			{
+				cout << "ERROR:\n" << my_ui.get_error_msg() << endl;
+				return 1;
+			}
+		}
 	}
 
 	my_ui.init_ui();
@@ -274,6 +283,7 @@ int main(int argc, char *argv[])
 	my_ui.run();
 
 	my_ui.shut_ui();
+	cout << "\33c";
 	if (my_ui.get_error() == true)
 	{
 		cout << "ERROR:\n" << my_ui.get_error_msg() << endl;

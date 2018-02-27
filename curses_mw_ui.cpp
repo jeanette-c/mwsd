@@ -22,6 +22,7 @@
 #include <iostream> // for cout int list_ports
 #include <fstream>
 #include <chrono>
+#include <boost/filesystem.hpp>
 #include <thread>
 #include <cmath>
 #include <cstring>
@@ -38,6 +39,7 @@ using std::vector;
 using std::ceil;
 using std::strlen;
 using std::isspace;
+namespace fs = boost::filesystem;
 
 Curses_mw_ui::Curses_mw_ui(string res_dir):
 	its_x(3), its_y(3), its_ch(0), its_res_dir(res_dir),
@@ -877,7 +879,7 @@ bool Curses_mw_ui::save_dump()
 						{
 							if (its_use_res_dir == true)
 							{
-								filename = its_res_dir + string("/") + filename;
+								filename = its_res_dir + string("/") + its_mw_miner->get_last_type() + string("/") + filename;
 							}
 							return_value = its_mw_miner->write_last_dump(filename);
 							if (return_value == false)
@@ -1478,4 +1480,39 @@ void mw_dev_id_discovery_callback(double deltatime, vector<unsigned char> *messa
 	Curses_mw_ui *my_ui = (Curses_mw_ui *)user_data;
 	// Do the rest within Curses_mw_ui object, because of local information
 	my_ui->discover_id(message);
+}
+
+bool Curses_mw_ui::check_res_dir()
+{
+	bool return_value = true;
+	fs::path res_sub_path(its_res_dir);
+	vector<string> the_names = its_synth_info->get_dump_names();
+	string sub_dir;
+	for (auto msg_type: the_names)
+	{
+		if ((msg_type.compare("display") != 0) && (msg_type.compare("mode") != 0))
+		{
+			sub_dir = its_res_dir + string("/") + msg_type;
+			res_sub_path = sub_dir;
+			if (fs::exists(res_sub_path))
+			{
+				if (!fs::is_directory(res_sub_path))
+				{
+					return_value = false;
+					its_error_msg = sub_dir + string("exists, but is no directory.");
+					break;
+				}
+			}
+			else
+			{
+				if (!fs::create_directory(res_sub_path))
+				{
+					return_value = false;
+					its_error_msg = string("Can't create folder ") + sub_dir;
+					break;
+				}
+			}
+		}
+	}
+	return return_value;
 }

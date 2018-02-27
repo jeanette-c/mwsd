@@ -56,6 +56,7 @@ class Synth_info
 		unsigned int get_dump_patch(unsigned char cmd);
 		unsigned int get_dump_name_start(unsigned char cmd);
 		unsigned int get_dump_name_chars(unsigned char cmd);
+		std::vector<std::string> get_dump_names() const;
 		void set_dev_id(unsigned char dev_id); // set dev_id and adapt disp_req vector
 		void prepare_disp(std::vector<unsigned char>* syx_msg, \
 			std::vector<std::string>* disp); // put formatted

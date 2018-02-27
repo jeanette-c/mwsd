@@ -163,3 +163,14 @@ unsigned int Synth_info::get_dump_name_chars(unsigned char cmd)
 	}
 	return name_chars;
 }
+
+vector<string> Synth_info::get_dump_names() const
+{
+	vector<string> the_names;
+	the_names.reserve(its_dump_cmds.size());
+	for (auto cmd_name: its_dump_cmds)
+	{
+		the_names.push_back(cmd_name.second);
+	}
+	return the_names;
+}

@@ -50,6 +50,7 @@ class Curses_mw_ui
 			// Local part of dev ID discovery RtMidi callback
 		void discover_id(std::vector<unsigned char> *message);
 		std::string trim(char*) const;
+		bool check_res_dir(); // Check that all subpaths exist
 
 			// UI screen functions
 		void print_main_screen(); // just print the main screen again
