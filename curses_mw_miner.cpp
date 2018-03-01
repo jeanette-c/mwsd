@@ -369,9 +369,27 @@ void Curses_mw_miner::print_thru()
 			  string cmd_name = its_synth_info->get_dump_name(cmd_byte);
 		if (!cmd_name.empty())
 		{
-			mvwprintw(window,3,2,"%s dump",cmd_name.c_str());
+			if (cmd_name.compare("mode") == 0)
+			{
+				if (its_old_midi_msg[5] == 0)
+				{
+					mvwprintw(window,3,2,"Mode: sound");
+				}
+				else
+				{
+					mvwprintw(window,3,2,"Mode: multi");
+				}
+			}
+			else if (cmd_name.compare("remote") == 0)
+			{
+				mvwprintw(window,3,2,"Remote: Element: %d Movement: %d",its_old_midi_msg[5],its_old_midi_msg[6]);
+			}
+			else
+			{
+				mvwprintw(window,3,2,"%s dump",cmd_name.c_str());
+			}
 		}
-		else
+		else // It's not a dump command, so print plain SysEx
 		{
 			int i = 0; // column to print the byte
 			for (auto byte: its_old_midi_msg)

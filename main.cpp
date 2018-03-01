@@ -204,15 +204,18 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			bool ret = my_ui.check_res_dir();
-			if (ret == false)
-			{
-				cout << "ERROR:\n" << my_ui.get_error_msg() << endl;
-				return 1;
-			}
 		}
 	}
 
+	// Now check for subfolders of resource directory
+	bool ret = my_ui.check_res_dir();
+	if (ret == false)
+	{
+		cout << "ERROR:\n" << my_ui.get_error_msg() << endl;
+		return 1;
+	}
+
+	// Initialise the UI to continue with the interactive stuff
 	my_ui.init_ui();
 
 	// Interactively query missing information

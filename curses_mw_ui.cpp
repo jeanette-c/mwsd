@@ -793,11 +793,11 @@ bool Curses_mw_ui::save_dump()
 	}
 	else // It's some kind of dump
 	{
-		if (msg_type.compare("display") == true)
+		if ((msg_type.compare("display") == true) || (msg_type.compare("mode") == true) || (msg_type.compare("remote") == 0))
 		{
 			return false;
 		}
-		else // it's not a display dump, so save
+		else // it's not a display/mode/remote dump, so save
 		{
 			bool local_quit = false; // set to true, when quitting
 			string filename;
@@ -1488,9 +1488,11 @@ bool Curses_mw_ui::check_res_dir()
 	fs::path res_sub_path(its_res_dir);
 	vector<string> the_names = its_synth_info->get_dump_names();
 	string sub_dir;
+
+	// Go through all possible dump types, sparing a few
 	for (auto msg_type: the_names)
 	{
-		if ((msg_type.compare("display") != 0) && (msg_type.compare("mode") != 0))
+		if ((msg_type.compare("display") != 0) && (msg_type.compare("mode") != 0) && (msg_type.compare("remote") != 0))
 		{
 			sub_dir = its_res_dir + string("/") + msg_type;
 			res_sub_path = sub_dir;
