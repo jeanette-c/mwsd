@@ -1,0 +1,75 @@
+.\" mwsd released under the GNU General Public Licence version 3.
+.TH mwsd 1 "April 2020" "Version 0.7"
+.SH NAME
+mwsd \- Waldorf Microwave II synthesizer Display
+.SH SYNOPSIS
+.SY
+mwsd
+.OP \-c config_file
+.OP \-i MIDI_port_name
+.OP \-o MIDI_port_name
+.OP \-p MIDI_port_name
+.OP \-d device_id
+.OP -r resource_folder
+.SY
+mwsd
+.OP \-l
+.SY
+mwsd
+.OP \-hv
+.YS
+.SH DESCRIPTION
+mwsd is a curses based program to help edit your
+.B "Waldorf Micorwave II/XT/XTK"
+from the computer. It will display either the MIDI controller and value or
+system exclusive output or reflect the
+.B Microwave's
+display.
+.SH OPTIONS
+.SS INFORMATION OPTIONS
+.TP
+\-h \-\-help
+Show a brief help message and options overview
+.TP
+\-v \-\-version
+Show the version and copyright
+.TP
+\-l \-\-list_ports
+List all available MIDI ports, you can use these names for the -i and -o options
+.SS GENERAL OPTIONS
+.TP
+\-c \-\-config config_file
+Specify an alternative configuration file
+.TP
+\-i \-\-input_port MIDI_port_name
+Specify the input MIDI port to use. This can also be set inside the program
+or read from an existing configuration file.
+.TP
+\-o \-\-output_port MIDI_port_name
+Specify the output MIDI port to use. This can also be set inside the program
+or read from an existing configuration file.
+.TP
+\-p \-\-io_ports MIDI_port_name
+Specify the name of the input and output MIDI port. Mostly a MIDI interface
+would have the same client name for both input and output port.
+You can always check names with -l.
+.TP
+\-d \-\-device_id device_id
+Set the device ID of your Microwave synthesizer. If you only have one or want
+to see the output from all your Microwaves this is not necessary. By default
+mwsd will broadcast to all Microwaves (ID 127).
+.TP
+\-r \-\-resource_folder path
+Specify an alternative resource_folder. Currently the resource folder is not
+used by the program. It is intended to store SysEx dumps of sounds and data.
+.SH BUGS
+If your Microwave is connected to a USB MIDI adapter there can be a buffer
+overflow. Basically, some USB MIDI adapters temporarily store some MIDI.
+.PP
+If mwsd is in continuous display mode and a data dump is initiated the program
+will shut down after a few seconds, because its request for a display update
+is not answered.
+.SH COPYRIGHT
+Copyright 2018-2020 Jeanette C.
+
+mwsd is released under the GNU General Public Licence version 3.

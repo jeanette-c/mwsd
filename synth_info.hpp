@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef _MWSD_SYNTH_INFO_HPP_
-#define _MWSD_SYNTH_INFO_HPP_
+#ifndef MWSD_SYNTH_INFO_HPP
+#define MWSD_SYNTH_INFO_HPP
 
 #include <vector>
 #include <string>
@@ -81,4 +81,4 @@ class Synth_info
 		std::unordered_map<unsigned char,unsigned int> its_dump_name_chars;
 };
 
-#endif // #ifndef _SYNTH_INFO_HPP_
+#endif // #ifndef SYNTH_INFO_HPP

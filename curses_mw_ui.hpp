@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef _MWSD_CURSES_MW_UI_HPP_
-#define _MWSD_CURSES_MW_UI_HPP_
+#ifndef MWSD_CURSES_MW_UI_HPP
+#define MWSD_CURSES_MW_UI_HPP
 
 #include <ncurses.h>
 #include <string>
@@ -94,4 +94,4 @@ void mw_midi_callback(double deltatime, std::vector<unsigned char>* message, voi
 void mw_port_discovery_callback(double deltatime,std::vector<unsigned char> *message,void *user_data);
 void mw_dev_id_discovery_callback(double deltatime,std::vector<unsigned char> *message, void *user_data);
 
-#endif // #ifndef _MWSD_CURSES_MW_UI_HPP_
+#endif // #ifndef MWSD_CURSES_MW_UI_HPP

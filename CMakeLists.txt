@@ -83,3 +83,4 @@ include_directories (${INCS})
 target_link_libraries (mwsd ${LIBS})
 
 install (TARGETS mwsd DESTINATION bin)
+install (FILES mwsd.1 DESTINATION man/man1)

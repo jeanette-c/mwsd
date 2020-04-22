@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef _MWSD_CURSES_MW_MINER_HPP_
-#define _MWSD_CURSES_MW_MINER_HPP_
+#ifndef MWSD_CURSES_MW_MINER_HPP
+#define MWSD_CURSES_MW_MINER_HPP
 
 #include <atomic>
 #include <string>
@@ -95,4 +95,4 @@ class Curses_mw_miner {
 		WINDOW *window; // data window
 };
 
-#endif // #ifndef _MWSD_CURSES_MW_MINER_HPP_
+#endif // #ifndef MWSD_CURSES_MW_MINER_HPP
