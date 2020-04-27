@@ -1,7 +1,7 @@
 /* curses_mw_miner.cpp - implementation of the class
  * Curses_mw_miner the data miner class that actually talks to the synthesizer
  * and interpretes its MIDI/SysEx responses
- * Copyright (C) 2018 Jeanette C. <jeanette@juliencoder.de>
+ * Copyright (C) 2018-2020 Jeanette C. <jeanette@juliencoder.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

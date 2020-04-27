@@ -1,7 +1,7 @@
 /* synth_info.cpp - implementation of the Synth_info class, a storage class,
  * which holds synthesizer specific properties and values, in preparation
  * for further synthesizers being added to this tool.
- * Copyright (C) 2018 Jeanette C. <jeanette@juliencoder.de>
+ * Copyright (C) 2018-2020 Jeanette C. <jeanette@juliencoder.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

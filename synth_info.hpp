@@ -1,6 +1,6 @@
 /* synth_info.cpp - definition of the Synth_info class, a storage class
  * holding synthesizer specific properties and values.
- * Copyright (C) 2018 Jeanette C. <jeanette@juliencoder.de>
+ * Copyright (C) 2018-2020 Jeanette C. <jeanette@juliencoder.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

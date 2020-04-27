@@ -1,7 +1,7 @@
 /* curses_mw_ui.cpp - implementatio of the Curses_mw_ui class.
  * This class handles the program's main event loop and all other functionality
  * that isn't directly involved with the MIDI/SysEx communication.
- * Copyright (C) 2018 Jeanette C. <jeanette@juliencoder.de>
+ * Copyright (C) 2018-2020 Jeanette C. <jeanette@juliencoder.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

@@ -3,7 +3,7 @@
  * interpretes its MIDI/SysEx responses.
  * This class uses the ncurses library for its display output, in future
  * the screen UI part should be separated from the underlying functionality.
- * Copyright (C) 2018 Jeanette C. <jeanette@juliencoder.de>
+ * Copyright (C) 2018-2020 Jeanette C. <jeanette@juliencoder.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

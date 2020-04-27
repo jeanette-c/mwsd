@@ -1,5 +1,5 @@
 /* main.cpp - main program of the mwsd (MicroWave Synthesizer Display)
- * Copyright (C) 2018 Jeanette C. <jeanette@juliencoder.de>
+ * Copyright (C) 2018-2020 Jeanette C. <jeanette@juliencoder.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 		if (vm.count("help"))
 		{
 			cout << PACKAGE_STRING << endl;
-			cout << "Copyright (c) 2018 by Jeanette C.\n";
+			cout << "Copyright (c) 2018-2020 by Jeanette C.\n";
 			cout << "Released under the GPL version 3.\n";
 			cout << commandline_desc << endl;
 			return 0;
@@ -135,8 +135,8 @@ int main(int argc, char *argv[])
 		if (vm.count("version"))
 		{
 			cout << PACKAGE_STRING << endl;
-			cout << "\t(Released 02.2018)\n";
-			cout << "Copyright (c) 2018 by Jeanette C.\n";
+			cout << "\t(Released 04.2020)\n";
+			cout << "Copyright (c) 2018-2020 by Jeanette C.\n";
 			cout << "This is free software released under the terms of the GPL version 3.\n";
 			return 0;
 		}
