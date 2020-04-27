@@ -192,7 +192,7 @@ void Curses_mw_miner::accept_msg(double delta_time, vector<unsigned char> *messa
 	{
 		unsigned char cmd_byte; // command byte of the SysEx string
 		bool same = true; // used to compare vectors by element
-		int comp_size = 0; // how many vector elements to compare
+		unsigned long int comp_size = 0; // how many vector elements to compare
 		if (its_disp_flag == true)
 		{
 			if (message->size() >=5)
@@ -209,7 +209,7 @@ void Curses_mw_miner::accept_msg(double delta_time, vector<unsigned char> *messa
 					comp_size = message->size();
 					if (comp_size == its_old_disp_msg.size())
 					{
-						for (int i = 0;i<comp_size;i++)
+						for (long unsigned int i = 0;i<comp_size;i++)
 						{
 							if (message->at(i) != its_old_disp_msg[i])
 							{
@@ -253,7 +253,7 @@ void Curses_mw_miner::accept_msg(double delta_time, vector<unsigned char> *messa
 				comp_size = message->size();
 				if (comp_size == its_old_midi_msg.size()) // different size, different msg
 				{
-					for (int i = 0;i<comp_size;i++)
+					for (long unsigned int i = 0;i<comp_size;i++)
 					{
 						if (message->at(i) != its_old_midi_msg[i])
 						{
@@ -298,7 +298,7 @@ void Curses_mw_miner::accept_msg(double delta_time, vector<unsigned char> *messa
 					comp_size = message->size();
 					if (comp_size == its_old_disp_msg.size())
 					{
-						for (int i = 0;i<comp_size;i++)
+						for (long unsigned int i = 0;i<comp_size;i++)
 						{
 							if (message->at(i) != its_old_disp_msg[i])
 							{
@@ -326,11 +326,12 @@ void Curses_mw_miner::accept_msg(double delta_time, vector<unsigned char> *messa
 			}
 		}
 	}
-	else // its_paused is true
-	{
-		// JBS only accept identity response
-		;
-	}
+	/* JBS no action for else
+		else // its_paused is true
+		{
+			// JBS only accept identity response
+		}
+	*/
 }
 
 void Curses_mw_miner::print_disp()
@@ -497,7 +498,7 @@ bool Curses_mw_miner::write_last_dump(string filename)
 	std::ofstream fout(filename.c_str(), std::ios::out | std::ios::binary);
 	if (!fout.bad())
 	{
-		fout.write((const char*)&its_old_midi_msg[0],its_old_midi_msg.size());
+		fout.write((const char*)(&its_old_midi_msg[0]),static_cast<long>(its_old_midi_msg.size()));
 		fout.close();
 	}
 	else

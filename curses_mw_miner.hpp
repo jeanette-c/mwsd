@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 #include <ncurses.h>
-#include <RtMidi.h>
+#include <rtmidi/RtMidi.h>
 #include "synth_info.hpp" // contains Synth_info data class
 
 /* Curses_mw_miner - the main work class

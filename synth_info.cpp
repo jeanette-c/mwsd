@@ -84,15 +84,15 @@ void Synth_info::prepare_disp(vector<unsigned char>* syx_msg, vector<string>* di
 	{
 		string tmp_msg;
 		tmp_msg.reserve(syx_msg->size());
-		for (int i = 5;i<(syx_msg->size() - 1);i++)
+		for (unsigned long int i = 5;i<(syx_msg->size() - 1);i++)
 		{
 			if (syx_msg->at(i) >= 32)
 			{
-				tmp_msg.push_back(syx_msg->at(i));
+				tmp_msg.push_back(static_cast<char>(syx_msg->at(i)));
 			}
 		}
 		disp->clear();
-		for (int i = 0;i<its_disp_rows;i++)
+		for (unsigned long int i = 0;i<its_disp_rows;i++)
 		{
 			disp->push_back(tmp_msg.substr(40*i,40));
 		}

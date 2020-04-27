@@ -42,16 +42,15 @@ using std::isspace;
 namespace fs = boost::filesystem;
 
 Curses_mw_ui::Curses_mw_ui(string res_dir):
-	its_x(3), its_y(3), its_ch(0), its_res_dir(res_dir),
-	its_cfg_file_name(""), its_error_msg(""),
-	its_midi_input_name("In"), its_midi_output_name("Out"),
-	its_status_line(17), its_error_line(18), its_suggested_dev_id(0x7f),
-		  its_use_res_dir(true)
+	its_use_res_dir(true), its_res_dir(res_dir), its_cfg_file_name(""),
+	its_midi_input_name("In"), its_midi_output_name("Out"), its_error_msg(""),
+	its_x(3), its_y(3), its_ch(0), its_status_line(17), its_error_line(18),
+	its_suggested_dev_id(0x7f)
 {
+	its_error_flag.store(false);
 	its_midi_name = string("MWII Display");
 	its_midi_in = new RtMidiIn(RtMidi::Api::UNSPECIFIED,its_midi_name);
 	its_midi_out = new RtMidiOut(RtMidi::Api::UNSPECIFIED,its_midi_name);
-	its_error_flag.store(false);
 	its_synth_info = new Synth_info(0x3e,0x0e,0x7f,0x05,0x15,40,2);
 	its_mw_miner = new Curses_mw_miner(its_midi_out,its_synth_info);
 	its_discovery_flag.store(false);
@@ -77,9 +76,9 @@ Curses_mw_ui::~Curses_mw_ui()
 	delete its_synth_info;
 }
 
-bool Curses_mw_ui::set_midi_input(int port_number)
+bool Curses_mw_ui::set_midi_input(unsigned int port_number)
 {
-	int port_count = its_midi_in->getPortCount();
+	unsigned int port_count = its_midi_in->getPortCount();
 	if (port_count == 0)
 	{
 		its_error_msg = string("There are no MIDI input ports available");
@@ -116,7 +115,7 @@ bool Curses_mw_ui::set_midi_input(int port_number)
 bool Curses_mw_ui::set_midi_input(string port_name)
 {
 	int port_number = -1;
-	int port_count = its_midi_in->getPortCount();
+	unsigned int port_count = its_midi_in->getPortCount();
 	string cur_port_name;
 	if (port_count == 0)
 	{
@@ -126,12 +125,12 @@ bool Curses_mw_ui::set_midi_input(string port_name)
 	}
 	else
 	{
-		for (int i = 0;i<port_count;i++)
+		for (unsigned int i = 0;i<port_count;i++)
 		{
 			cur_port_name = its_midi_in->getPortName(i);
 			if (cur_port_name == port_name)
 			{
-				port_number = i;
+				port_number = static_cast<int>(i);
 				break;
 			}
 		}
@@ -148,7 +147,7 @@ bool Curses_mw_ui::set_midi_input(string port_name)
 			}
 			try
 			{
-				its_midi_in->openPort(port_number,string("In"));
+				its_midi_in->openPort(static_cast<unsigned int>(port_number),string("In"));
 			}
 			catch (RtMidiError& e)
 			{
@@ -162,9 +161,9 @@ bool Curses_mw_ui::set_midi_input(string port_name)
 	return true;
 }
 
-bool Curses_mw_ui::set_midi_output(int port_number)
+bool Curses_mw_ui::set_midi_output(unsigned int port_number)
 {
-	int port_count = its_midi_out->getPortCount();
+	unsigned int port_count = its_midi_out->getPortCount();
 	if (port_count == 0)
 	{
 		its_error_msg = string("There are no MIDI output ports available");
@@ -201,7 +200,7 @@ bool Curses_mw_ui::set_midi_output(int port_number)
 bool Curses_mw_ui::set_midi_output(string port_name)
 {
 	int port_number = -1;
-	int port_count = its_midi_out->getPortCount();
+	unsigned int port_count = its_midi_out->getPortCount();
 	string cur_port_name;
 	if (port_count == 0)
 	{
@@ -211,12 +210,12 @@ bool Curses_mw_ui::set_midi_output(string port_name)
 	}
 	else
 	{
-		for (int i = 0;i<port_count;i++)
+		for (unsigned int i = 0;i<port_count;i++)
 		{
 			cur_port_name = its_midi_out->getPortName(i);
 			if (cur_port_name == port_name)
 			{
-				port_number = i;
+				port_number = static_cast<int>(i);
 				break;
 			}
 		}
@@ -233,7 +232,7 @@ bool Curses_mw_ui::set_midi_output(string port_name)
 			}
 			try
 			{
-				its_midi_out->openPort(port_number,string("Out"));
+				its_midi_out->openPort(static_cast<unsigned int>(port_number),string("Out"));
 			}
 			catch (RtMidiError& e)
 			{
@@ -250,7 +249,7 @@ bool Curses_mw_ui::set_midi_output(string port_name)
 // Print the main screen/window
 void Curses_mw_ui::print_main_screen()
 {
-	unsigned int cur_line = 1; // line number to print to
+	int cur_line = 1; // line number to print to
 	wclear(its_win);
 	box(its_win,0,0);
 	mvwprintw(its_win,cur_line,5,"%s",PACKAGE_STRING);
@@ -342,10 +341,10 @@ void Curses_mw_ui::print_help()
 	content.push_back(string("V - Select a new device ID"));
 	content.push_back(string("W - Write the configuration file"));
 	int start_line = 3;
-	int num_lines = (its_status_line - start_line); // Available screen lines
-	int num_pages = ceil(content.size() / float(num_lines)); // number of pages
+	unsigned int num_lines = static_cast<unsigned int>(its_status_line - start_line); // Available screen lines
+	unsigned int num_pages = static_cast<unsigned int>(ceil(content.size() / float(num_lines))); // number of pages
 	unsigned int cur_page = 0; // number of current page
-	unsigned int max_msg = 0; // maximum message index to print
+	unsigned long int max_msg = 0; // maximum message index to print
 
 	// print first page
 	if (content.size() < (num_lines * (cur_page +1) -1))
@@ -357,7 +356,7 @@ void Curses_mw_ui::print_help()
 		max_msg = (num_lines * (cur_page + 1));
 	}
 	int cur_line = start_line;
-	for (int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
+	for (unsigned int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
 	{
 		mvwprintw(its_win,cur_line,2,"%s",content[i].c_str());
 	}
@@ -391,7 +390,7 @@ void Curses_mw_ui::print_help()
 					box(its_win,0,0);
 					mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
 					mvwprintw(its_win,2,3,"Press 'H' to leave the help screen, PGUP/PGDOWN to scroll");
-					for (int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
+					for (unsigned int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
 					{
 						mvwprintw(its_win,cur_line,2,"%s",content[i].c_str());
 					}
@@ -422,7 +421,7 @@ void Curses_mw_ui::print_help()
 					box(its_win,0,0);
 					mvwprintw(its_win,1,5,"%s",PACKAGE_STRING);
 					mvwprintw(its_win,2,3,"Press 'H' to leave the help screen, PGUP/PGDOWN to scroll");
-					for (int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
+					for (unsigned int i = (cur_page * num_lines);i<max_msg;i++, cur_line++)
 					{
 						mvwprintw(its_win,cur_line,2,"%s",content[i].c_str());
 					}
@@ -480,7 +479,7 @@ bool Curses_mw_ui::change_port(char designation)
 		its_error_msg = string("Wrong port designation");
 		return false;
 	}
-	int port_count = cur_midi->getPortCount();
+	unsigned int port_count = cur_midi->getPortCount();
 	if (port_count == 0)
 	{
 		if (designation == 'i')
@@ -504,10 +503,10 @@ bool Curses_mw_ui::change_port(char designation)
 	}
 
 	// Print the list of ports
-	for (int i =0;i<port_count;i++)
+	for (unsigned int i =0;i<port_count;i++)
 	{
 		cur_port_name = cur_midi->getPortName(i);
-		mvwprintw(its_win,(5+i),3,"%d - %s",i,cur_port_name.c_str());
+		mvwprintw(its_win,static_cast<int>(5+i),3,"%d - %s",i,cur_port_name.c_str());
 	}
 	its_y = 5;
 	its_x = 3;
@@ -536,7 +535,7 @@ bool Curses_mw_ui::change_port(char designation)
 			case KEY_DOWN:
 			{
 				getyx(its_win,its_y,its_x);
-				if (its_y <(4 + port_count))
+				if (its_y <static_cast<int>(4 + port_count))
 				{
 					its_y++;
 					wmove(its_win,its_y,its_x);
@@ -578,11 +577,11 @@ bool Curses_mw_ui::change_port(char designation)
 	{
 		if (designation == 'i')
 		{
-			return_value = set_midi_input(cur_port_number);
+			return_value = set_midi_input(static_cast<unsigned int>(cur_port_number));
 		}
 		else
 		{
-			return_value = set_midi_output(cur_port_number);
+			return_value = set_midi_output(static_cast<unsigned int>(cur_port_number));
 		}
 	}
 	return return_value;
@@ -590,7 +589,7 @@ bool Curses_mw_ui::change_port(char designation)
 
 void Curses_mw_ui::change_dev_id()
 {
-	int cur_id = its_synth_info->get_dev_id();
+	unsigned char cur_id = its_synth_info->get_dev_id();
 	bool search_quit = false; // set to true to quit screen
 	wclear(its_win);
 	box(its_win,0,0);
@@ -695,7 +694,7 @@ bool Curses_mw_ui::write_cfg()
 	cfg_out << "# Configuration file for " << PACKAGE_STRING << endl;
 	cfg_out << "input_port = " << its_midi_input_name << "\n";
 	cfg_out << "output_port = " << its_midi_output_name << "\n";
-	cfg_out << "device_id = " << (unsigned short int)its_synth_info->get_dev_id() << "\n";
+	cfg_out << "device_id = " << static_cast<unsigned short int>(its_synth_info->get_dev_id()) << "\n";
 	cfg_out << "resource_folder = " << its_res_dir;
 	cfg_out.close();
 	return true;
@@ -703,13 +702,13 @@ bool Curses_mw_ui::write_cfg()
 
 void Curses_mw_ui::list_ports()
 {
-	int port_count = its_midi_in->getPortCount();
+	unsigned int port_count = its_midi_in->getPortCount();
 	cout << PACKAGE_STRING << endl;
 	cout << "Listing available MIDI ports.\n\n";
 	cout << "MIDI input ports:\n";
 	if (port_count >0)
 	{
-		for (int i = 0;i<port_count;i++)
+		for (unsigned int i = 0;i<port_count;i++)
 		{
 			cout << "\t" << its_midi_in->getPortName(i) << endl;
 		}
@@ -722,7 +721,7 @@ void Curses_mw_ui::list_ports()
 	cout << "MIDI output ports:\n";
 	if (port_count >0)
 	{
-		for (int i = 0;i<port_count;i++)
+		for (unsigned int i = 0;i<port_count;i++)
 		{
 			cout << "\t" << its_midi_out->getPortName(i) << endl;
 		}
@@ -812,7 +811,7 @@ bool Curses_mw_ui::save_dump()
 			fields[1] = new_field(1,1,1,10,0,0);
 			fields[2] = new_field(1,64,1,11,0,0);
 			fields[3] = new_field(1,1,1,75,0,0);
-			fields[4] = NULL;
+			fields[4] = nullptr;
 			set_field_buffer(fields[0],0,"Filename:");
 			set_field_buffer(fields[1],0,"[");
 			set_field_buffer(fields[2],0,filename.c_str());
@@ -915,13 +914,12 @@ bool Curses_mw_ui::save_dump()
 // Main UI event loop for the program
 bool Curses_mw_ui::run()
 {
-	bool return_value = true; // return value of this function
 	bool ret = true; // used to capture return values from other function calls
 
 	// MIDI in will accept SysEx, but no clock and active sensing
 	its_midi_in->ignoreTypes(false,true,true);
 	// Set callback for MIDI input, so Curses_mw_miner is notified on new data
-	its_midi_in->setCallback(&mw_midi_callback,(void *)its_mw_miner);
+	its_midi_in->setCallback(&mw_midi_callback,static_cast<void *>(its_mw_miner));
 	print_main_screen();
 	thread mw_miner_thread(&Curses_mw_miner::run,its_mw_miner);
 	std::chrono::milliseconds sleep_time(5); // 5ms between each read
@@ -997,7 +995,7 @@ bool Curses_mw_ui::run()
 			case 'S':
 			{
 				its_mw_miner->set_paused(true);
-				bool ret = save_dump();
+				ret = save_dump();
 				its_mw_miner->set_paused(false);
 				print_main_screen();
 				if ((ret == false) && (its_error_msg.empty() == false))
@@ -1099,7 +1097,7 @@ bool Curses_mw_ui::run()
 			case 'P':
 			{
 				its_mw_miner->set_paused(true);
-				bool ret = probe_synth();
+				ret = probe_synth();
 				if (ret == false)
 				{
 					if (its_error_flag == true)
@@ -1150,9 +1148,11 @@ bool Curses_mw_ui::run()
 	}
 
 	// destroy members and check for errors
-	if (its_error_flag == true)
-	{
-	}
+	/* JBS why nothing inside the if-statement
+		if (its_error_flag == true)
+		{
+		}
+	*/
 	if (its_mw_miner->get_error() == true)
 	{
 		its_error_msg += string("\n") + its_mw_miner->get_error_msg();
@@ -1260,14 +1260,14 @@ bool Curses_mw_ui::probe_synth()
 	its_discovery_flag.store(false); // will be set by discovery callbacks
 
 	// Prepare the I/O listing and all vectors
-	for (int i = 0;i<incount;i++)
+	for (unsigned int i = 0;i<incount;i++)
 	{
 		vmin.push_back(new RtMidiIn(RtMidi::Api::UNSPECIFIED,probe_client_name));
 		tmp_name = string("In-") + std::to_string(i);
 		vmin[i]->openPort(i,tmp_name);
 		vmin[i]->ignoreTypes(false,true,true);
 	}
-	for (int i = 0;i<outcount;i++)
+	for (unsigned int i = 0;i<outcount;i++)
 	{
 		vmout.push_back(new RtMidiOut(RtMidi::Api::UNSPECIFIED,probe_client_name));
 		tmp_name = string("Out-") + std::to_string(i);
@@ -1276,9 +1276,9 @@ bool Curses_mw_ui::probe_synth()
 
 	// Discover synths and store I/O port_number pairs
 	its_discovery_flag.store(false);
-	for (int i = 0;i<outcount;i++)
+	for (unsigned int i = 0;i<outcount;i++)
 	{
-		for (int j = 0;j<incount;j++)
+		for (unsigned int j = 0;j<incount;j++)
 		{
 			vmin[j]->setCallback(&mw_port_discovery_callback,this);
 			if (vmout[i]->isPortOpen())
@@ -1313,13 +1313,13 @@ bool Curses_mw_ui::probe_synth()
 		{
 			mvwprintw(its_win,3,2,"These synthesizers were found:");
 		}
-		for (int i = 0;i<synth_ports.size();i++)
+		for (unsigned long int i = 0;i<synth_ports.size();i++)
 		{
-			mvwprintw(its_win,(4 + (i*3)),2,"Synthesizer found on:");
+			mvwprintw(its_win,(4 + static_cast<int>(i*3)),2,"Synthesizer found on:");
 			tmp_name = min->getPortName(synth_ports[i].first);
-			mvwprintw(its_win,(5 + (i*3)),4,"In:  %s",tmp_name.c_str());
+			mvwprintw(its_win,(5 + static_cast<int>(i*3)),4,"In:  %s",tmp_name.c_str());
 			tmp_name = mout->getPortName(synth_ports[i].second);
-			mvwprintw(its_win,(6 + (i*3)),4,"Out: %s",tmp_name.c_str());
+			mvwprintw(its_win,(6 + static_cast<int>(i*3)),4,"Out: %s",tmp_name.c_str());
 		}
 		its_x = 2;
 		its_y = 4;
@@ -1337,7 +1337,7 @@ bool Curses_mw_ui::probe_synth()
 					if (choice >0)
 					{
 						choice--;
-						its_y = 4 + (3 * choice);
+						its_y = 4 + (3 * static_cast<int>(choice));
 						wmove(its_win,its_y,its_x);
 						wrefresh(its_win);
 					}
@@ -1352,7 +1352,7 @@ bool Curses_mw_ui::probe_synth()
 					if (choice < (synth_ports.size() -1))
 					{
 						choice++;
-						its_y = 4 + (3 * choice);
+						its_y = 4 + (3 * static_cast<int>(choice));
 						wmove(its_win,its_y,its_x);
 						wrefresh(its_win);
 					}
@@ -1390,14 +1390,14 @@ bool Curses_mw_ui::probe_synth()
 		if (found == true) // synth chose, get dev ID now
 		{
 				// Number of input and output port
-			int input_n = synth_ports[choice].first;
-			int output_n = synth_ports[choice].second;
-			vmin[input_n]->setCallback(&mw_dev_id_discovery_callback,this);
-			vmout[output_n]->sendMessage(&idreq);
+			unsigned int input_n = synth_ports[choice].first;
+			unsigned int output_n = synth_ports[choice].second;
+			vmin[static_cast<unsigned long int>(input_n)]->setCallback(&mw_dev_id_discovery_callback,this);
+			vmout[static_cast<unsigned long int>(output_n)]->sendMessage(&idreq);
 			std::this_thread::sleep_for(sleep_time);
 			its_synth_info->set_dev_id(its_suggested_dev_id);
-			its_midi_input_name = vmin[input_n]->getPortName(input_n);
-			its_midi_output_name = vmout[output_n]->getPortName(output_n);
+			its_midi_input_name = vmin[static_cast<unsigned long int>(input_n)]->getPortName(input_n);
+			its_midi_output_name = vmout[static_cast<unsigned long int>(output_n)]->getPortName(output_n);
 			return_value = set_midi_input(input_n);
 			if (return_value == true)
 			{
@@ -1423,10 +1423,7 @@ bool Curses_mw_ui::probe_synth()
 		mvwprintw(its_win,3,2,"Press any key to return to main screen...");
 		wmove(its_win,2,2);
 		wrefresh(its_win);
-		while (getch() == ERR)
-		{
-			;
-		}
+		while (getch() == ERR);
 	}
 
 		// Cleanup: close all ports, delete all new'ed objects
@@ -1461,14 +1458,14 @@ bool Curses_mw_ui::probe_synth()
 
 void mw_midi_callback(double delta_time, vector<unsigned char>* message, void* user_data)
 {
-	Curses_mw_miner *my_miner = (Curses_mw_miner *)user_data;
+	Curses_mw_miner *my_miner = static_cast<Curses_mw_miner *>(user_data);
 	my_miner->accept_msg(delta_time,message);
 }
 
 // RtMidi callback for port probing for synths
 void mw_port_discovery_callback(double deltatime, vector<unsigned char> * message, void *user_data)
 {
-	Curses_mw_ui *my_ui = (Curses_mw_ui *)user_data;
+	Curses_mw_ui *my_ui = static_cast<Curses_mw_ui *>(user_data);
 	// Do the rest within the Curses_mw_ui object, because of local information
 	// needed:
 	my_ui->discover_port(message);
@@ -1477,7 +1474,7 @@ void mw_port_discovery_callback(double deltatime, vector<unsigned char> * messag
 // RtMidi callback to discover the ID of a synth
 void mw_dev_id_discovery_callback(double deltatime, vector<unsigned char> *message,void *user_data)
 {
-	Curses_mw_ui *my_ui = (Curses_mw_ui *)user_data;
+	Curses_mw_ui *my_ui = static_cast<Curses_mw_ui *>(user_data);
 	// Do the rest within Curses_mw_ui object, because of local information
 	my_ui->discover_id(message);
 }

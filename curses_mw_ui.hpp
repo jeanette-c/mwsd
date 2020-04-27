@@ -24,7 +24,7 @@
 #include <ncurses.h>
 #include <string>
 #include <atomic>
-#include <RtMidi.h>
+#include <rtmidi/RtMidi.h>
 #include "synth_info.hpp"
 #include "curses_mw_miner.hpp"
 
@@ -37,9 +37,9 @@ class Curses_mw_ui
 
 			// Access methods
 		void set_dev_id(unsigned char id) { its_synth_info->set_dev_id(id); }
-		bool set_midi_input(int port_number);
+		bool set_midi_input(unsigned int port_number);
 		bool set_midi_input(std::string port_name);
-		bool set_midi_output(int port_number);
+		bool set_midi_output(unsigned int port_number);
 		bool set_midi_output(std::string port_name);
 		void set_cfg_file_name(std::string name) { its_cfg_file_name = name; }
 		void set_res_dir(std::string res_dir) { its_res_dir = res_dir; }
@@ -68,23 +68,23 @@ class Curses_mw_ui
 		bool its_use_res_dir; // use the directory if true
 		std::string its_res_dir; // Path to the resources folder
 		std::string its_cfg_file_name; // name of the attached config file
-		std::string its_midi_name; // Port name for MIDI I/O ports
 		std::string its_midi_input_name; // name of connected input port
 		std::string its_midi_output_name; // name of connected output port
 		std::string its_error_msg; // string containing error message
-		std::atomic_bool its_error_flag; // set upon error
-		WINDOW *its_win; // main window
 		int its_x; // current x position on the window
 		int its_y; // current y position on the window
-		int its_error_line; // where to print errors
-		int its_status_line; // where to print status information
 		int its_ch; // character input by user
+		int its_status_line; // where to print status information
+		int its_error_line; // where to print errors
+		unsigned char its_suggested_dev_id; // used for synth probing
+		std::atomic_bool its_error_flag; // set upon error
+		std::string its_midi_name; // Port name for MIDI I/O ports
 		RtMidiIn *its_midi_in; // MIDI input port
 		RtMidiOut *its_midi_out; // MIDI output port
-		std::atomic_bool its_discovery_flag; // used for port/dev_id probing
-		unsigned char its_suggested_dev_id; // used for synth probing
 		Synth_info *its_synth_info; // data class holding synth specific info
 		Curses_mw_miner *its_mw_miner;
+		std::atomic_bool its_discovery_flag; // used for port/dev_id probing
+		WINDOW *its_win; // main window
 };
 
 // Callback function to be passed to RtMidiIn, user_data the Mw_miner

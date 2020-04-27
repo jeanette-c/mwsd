@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 
 		if (vm.count("device_id"))
 		{
-			my_ui.set_dev_id(vm["device_id"].as<unsigned short int>());
+			my_ui.set_dev_id(static_cast<unsigned char>(vm["device_id"].as<unsigned short int>()));
 			has_dev_id = true;
 		}
 	}
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 	// Interactively query missing information
 	if ((has_midi_in == false) && (has_midi_out == false))
 	{
-		bool ret = my_ui.probe_synth();
+		ret = my_ui.probe_synth();
 		if (ret == false)
 		{
 			if (my_ui.get_error() == true)
