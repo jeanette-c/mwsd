@@ -11,7 +11,7 @@ The software was designed to assist blind users of the Microwave II/XT
 synthesizer to enjoy their instruments, but it can also be used for remote
 diagnosis.
 
-FEATURES:
+FEATURES
 	* Autodetect MicroWAVE II/XT
 	* Manual setup of a synth (MIDI input/output and device ID)
 	* Show MIDI or SysEx (this should work for other synths too)
@@ -35,13 +35,13 @@ Libraries:
 	The rest should be system standard
 Standard development tools (a c++ compiler, linker, make, etc.)
 CMake - to build the software
-	(Compilation was tested with g++ version 7.2.1 and Clang)
+	(Compilation was tested with g++ versions 7.2.1, 10.0 and Clang)
 
 INSTALLATION
 (NOTE for Mac beginners: in the file for_mac_users.txt you will find an easy
-	guide to installing all the requirements and mwsd itself)
+	guide to install all the requirements and mwsd itself)
 mwsd uses CMake to build the software.
-Following these steps will buld and install the software:
+Following these steps will build and install the software:
 cd mwsd
 mkdir build
 cd build
@@ -51,15 +51,15 @@ sudo make install
 
 LICENSE
 This software is released under the terms of the GNU General Public License
-(GPL) version 3. It is open software. For further details see the file
+(GPL) version 3. It is free software. For further details see the file
 COPYING .
 
 CREDITS
-I would like to thanks the MilkyTracker project and Dale Winham in particular
+I would like to thank the MilkyTracker project and Dale Winham in particular
 for his FindRTMIDI cmake module, which I borrowed from MilkyTracker.
 
 BUGS
 There are no known issues at the moment. If you suspect a bug, please send
 an e-mail to me at: jeanette@juliencoder.de and mention mwsd in the subject.
 
-Thank you and enjoy the software
+Thank you and enjoy the software!

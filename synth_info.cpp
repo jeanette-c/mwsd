@@ -19,6 +19,7 @@
 */
 
 #include "synth_info.hpp"
+#include <stdexcept>
 
 using std::vector;
 using std::string;
@@ -108,6 +109,7 @@ string Synth_info::get_dump_name(unsigned char cmd)
 	}
 	catch (out_of_range& e)
 	{
+		;
 	}
 	return cmd_name;
 }
@@ -121,6 +123,7 @@ unsigned int Synth_info::get_dump_bank(unsigned char cmd)
 	}
 	catch(out_of_range& e)
 	{
+		;
 	}
 	return bank_no;
 }
@@ -134,6 +137,7 @@ unsigned int Synth_info::get_dump_patch(unsigned char cmd)
 	}
 	catch (out_of_range& e)
 	{
+		;
 	}
 	return patch_no;
 }
@@ -147,6 +151,7 @@ unsigned int Synth_info::get_dump_name_start(unsigned char cmd)
 	}
 	catch (out_of_range& e)
 	{
+		;
 	}
 	return name_start;
 }
@@ -160,6 +165,7 @@ unsigned int Synth_info::get_dump_name_chars(unsigned char cmd)
 	}
 	catch (out_of_range& e)
 	{
+		;
 	}
 	return name_chars;
 }
